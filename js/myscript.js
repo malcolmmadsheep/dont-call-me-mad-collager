@@ -2,7 +2,7 @@
   var canvas,
     context,
     objects = [];
-
+  console.log('huy');
   window.onload = function() {
     var imgSrc = '';
     var isDefault = true;
@@ -141,11 +141,11 @@
     objects[length].image.src = imgSrc;
 
     objects[length].image.onload = function() {
-      context.drawImage(objects[length].image, 
-                        pos.x - objects[length].options.width / 2, 
-                        pos.y - objects[length].options.height / 2, 
-                        objects[length].options.width,
-                        objects[length].options.height); 
+      context.drawImage(objects[length].image,
+        pos.x - objects[length].options.width / 2,
+        pos.y - objects[length].options.height / 2,
+        objects[length].options.width,
+        objects[length].options.height);
     }
   }
 
