@@ -2,7 +2,7 @@
   var canvas,
     context,
     objects = [];
-  console.log('huy');
+  console.log('huy huyushki');
   window.onload = function() {
     var imgSrc = '';
     var isDefault = true;
