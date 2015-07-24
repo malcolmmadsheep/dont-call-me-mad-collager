@@ -1,23 +1,34 @@
 ﻿(function() {
-    var canvas;
-    var ctx;
-    window.onload = function() {
-      var imgSrc = '';
-      var isDefault = true;
-      var brushes = document.getElementById('brushes');
-      var randBtn = document.getElementById('rand');
-      var isDowned = false;
-      var dontStop = false;
-      canvasCreation();
-      brushesSetUp(brushes);
-      canvas = document.getElementById('myCanvas');
-      ctx = canvas.getContext('2d');
-      var CHBshouldIStop = document.getElementById('shouldIStop');
-      var sizeRange = document.getElementById('size');
-      var sizeExamp = document.getElementById('examplePic');
-      var exampHeight = sizeExamp.height;
-      sizeExamp.height = window.innerHeight * sizeRange.value / 100;
-      canvas.addEventListener('click', function(evt) {
+  var canvas;
+  var ctx;
+  window.onload = function() {
+    var imgSrc = '';
+    var isDefault = true;
+    var brushes = document.getElementById('brushes');
+    var randBtn = document.getElementById('rand');
+    var isDowned = false;
+    var dontStop = false;
+    canvasCreation();
+    brushesSetUp(brushes);
+    canvas = document.getElementById('myCanvas');
+    ctx = canvas.getContext('2d');
+    var CHBshouldIStop = document.getElementById('shouldIStop');
+    var sizeRange = document.getElementById('size');
+    var sizeExamp = document.getElementById('examplePic');
+    var exampHeight = sizeExamp.height;
+    sizeExamp.height = window.innerHeight * sizeRange.value / 100;
+    canvas.addEventListener('click', function(evt) {
+      var size = sizeRange.value / 100;
+      var pos = getMousePos(canvas, evt);
+      if (isDefault) {
+        var n = (Math.random().toFixed(1) * 10) % 10 + 1;
+        imgSrc = 'img/' + String(n) + '.png';
+      }
+      faceDrawing(ctx, pos, imgSrc, size);
+    }, false);
+
+    canvas.addEventListener('mousemove', function(evt) {
+      if (isDowned && dontStop) {
         var size = sizeRange.value / 100;
         var pos = getMousePos(canvas, evt);
         if (isDefault) {
@@ -25,94 +36,73 @@
           imgSrc = 'img/' + String(n) + '.png';
         }
         faceDrawing(ctx, pos, imgSrc, size);
-      }, false);
-      
-      canvas.addEventListener('mousemove', function(evt) {
-        if(isDowned && dontStop) {
-          var size = sizeRange.value / 100;
-        var pos = getMousePos(canvas, evt);
-        if (isDefault) {
-          var n = (Math.random().toFixed(1) * 10) % 10 + 1;
-          imgSrc = 'img/' + String(n) + '.png';
-        }
-        faceDrawing(ctx, pos, imgSrc, size);
-        }
-        evt.target.style.cursor = 'initial';
-      }, false);
-      
-      canvas.addEventListener('mousedown', function() {
-        isDowned = true;
-      }, false);
-      
-      canvas.addEventListener('mouseup', function() {
-        isDowned = false;
-      }, false);
-      
-      randBtn.addEventListener('click', function() {
-        isDefault = true;
-        lastTarget = null;
-        $('.brush').removeClass('selected');
-      }, false);
-      
-      var cleCan = document.getElementById('clearCanvas');
-      cleCan.addEventListener('click', function() {
-        clearCanvas(ctx, canvas);
-      }, false);
-      
-      var lastTarget = null;
-      $('#brushes').on('click', function(e) {
-        var target;
-        if ($(e.target).is('div')) {
-          target = $(e.target);
-        }
-        else {
-          target = $(e.target).parent('div');
-        }
+      }
+      evt.target.style.cursor = 'initial';
+    }, false);
 
-        //target.toggleClass('selected');
-        //target.css('border-right', '3px solid red');
+    canvas.addEventListener('mousedown', function() {
+      isDowned = true;
+    }, false);
 
-        var lastSrc = lastTarget ? lastTarget.children('img').attr('src') : '';
-        var currSrc = target.children('img').attr('src');
+    canvas.addEventListener('mouseup', function() {
+      isDowned = false;
+    }, false);
 
-        if (!lastTarget) {
-          lastTarget = target;
-          target.addClass('selected');
-          target.css('border-right', '3px solid red');
-        } else if (lastSrc !== currSrc) {
-          lastTarget.removeClass('selected');
-          lastTarget.css('border-right', '1px solid navy');
-          lastTarget = target;
-          target.addClass('selected');
-          target.css('border-right', '3px solid red');
-     	}
+    randBtn.addEventListener('click', function() {
+      isDefault = true;
+      lastTarget = null;
+      $('.brush').removeClass('selected');
+    }, false);
 
-     	  
-        // } else {
-        //   target.toggleClass('selected');
-        //   target.css('border-right', '3px solid red');
-        // }
+    var cleCan = document.getElementById('clearCanvas');
+    cleCan.addEventListener('click', function() {
+      clearCanvas(ctx, canvas);
+    }, false);
 
-        imgSrc = target.children('img').attr('src');
-        $('#examplePic').attr('src', imgSrc);
-        isDefault = false;
-      });
-      
-      sizeRange.addEventListener('change', function() {
-        sizeExamp.height = window.innerHeight * sizeRange.value / 100;
-        var tools = document.getElementById('tools');
-        tools.height = window.innerHeight;
-      }, false);
-      
-      CHBshouldIStop.addEventListener('click', function(e) {
-        if(e.target.checked) {
-          dontStop = true;
-        } else {
-          dontStop= false;
-        }
-      }, false);
+    var lastTarget = null;
+    $('#brushes').on('click', function(e) {
+      var target;
+      if ($(e.target).is('div')) {
+        target = $(e.target);
+      } else {
+        target = $(e.target).parent('div');
+      }
+
+      var lastSrc = lastTarget ? lastTarget.children('img').attr('src') : '';
+      var currSrc = target.children('img').attr('src');
+
+      if (!lastTarget) {
+        lastTarget = target;
+        target.addClass('selected');
+        target.css('border-right', '3px solid red');
+      } else if (lastSrc !== currSrc) {
+        lastTarget.removeClass('selected');
+        lastTarget.css('border-right', '1px solid navy');
+        lastTarget = target;
+        target.addClass('selected');
+        target.css('border-right', '3px solid red');
+      }
+
+      imgSrc = target.children('img').attr('src');
+      $('#examplePic').attr('src', imgSrc);
+      isDefault = false;
+    });
+
+    sizeRange.addEventListener('change', function() {
+      sizeExamp.height = window.innerHeight * sizeRange.value / 100;
+      var tools = document.getElementById('tools');
+      tools.height = window.innerHeight;
+    }, false);
+
+    CHBshouldIStop.addEventListener('click', function(e) {
+      if (e.target.checked) {
+        dontStop = true;
+      } else {
+        dontStop = false;
+      }
+    }, false);
   }
-  
+
   window.onresize = function() {
     canvasResizing(canvas);
   }
