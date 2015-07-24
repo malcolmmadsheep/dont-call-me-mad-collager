@@ -1,22 +1,25 @@
 ﻿(function() {
-  var canvas;
-  var ctx;
+  var canvas,
+    context,
+    objects = [];
+
   window.onload = function() {
     var imgSrc = '';
     var isDefault = true;
     var brushes = document.getElementById('brushes');
     var randBtn = document.getElementById('rand');
-    var isDowned = false;
+    var mouseIsDown = false;
     var dontStop = false;
     canvasCreation();
     brushesSetUp(brushes);
     canvas = document.getElementById('myCanvas');
-    ctx = canvas.getContext('2d');
+    context = canvas.getContext('2d');
     var CHBshouldIStop = document.getElementById('shouldIStop');
     var sizeRange = document.getElementById('size');
     var sizeExamp = document.getElementById('examplePic');
     var exampHeight = sizeExamp.height;
     sizeExamp.height = window.innerHeight * sizeRange.value / 100;
+
     canvas.addEventListener('click', function(evt) {
       var size = sizeRange.value / 100;
       var pos = getMousePos(canvas, evt);
@@ -24,28 +27,28 @@
         var n = (Math.random().toFixed(1) * 10) % 10 + 1;
         imgSrc = 'img/' + String(n) + '.png';
       }
-      faceDrawing(ctx, pos, imgSrc, size);
+      createObject(pos, imgSrc, size);
     }, false);
 
     canvas.addEventListener('mousemove', function(evt) {
-      if (isDowned && dontStop) {
+      if (mouseIsDown && dontStop) {
         var size = sizeRange.value / 100;
         var pos = getMousePos(canvas, evt);
         if (isDefault) {
           var n = (Math.random().toFixed(1) * 10) % 10 + 1;
           imgSrc = 'img/' + String(n) + '.png';
         }
-        faceDrawing(ctx, pos, imgSrc, size);
+        createObject(pos, imgSrc, size);
       }
       evt.target.style.cursor = 'initial';
     }, false);
 
     canvas.addEventListener('mousedown', function() {
-      isDowned = true;
+      mouseIsDown = true;
     }, false);
 
     canvas.addEventListener('mouseup', function() {
-      isDowned = false;
+      mouseIsDown = false;
     }, false);
 
     randBtn.addEventListener('click', function() {
@@ -56,7 +59,7 @@
 
     var cleCan = document.getElementById('clearCanvas');
     cleCan.addEventListener('click', function() {
-      clearCanvas(ctx, canvas);
+      clearCanvas(context, canvas);
     }, false);
 
     var lastTarget = null;
@@ -128,18 +131,26 @@
     };
   }
 
-  function faceDrawing(ctx, pos, imgSrc, size) {
-    var myFace = new Image();
-    var height = window.innerHeight * size;
-    var width = height * 0.7;
-    myFace.onload = function() {
-      ctx.drawImage(myFace, pos.x - width / 2, pos.y - height / 2, width, height);
+  function createObject(pos, imgSrc, size) {
+    var length = objects.length;
+    objects[length] = {};
+    objects[length].image = new Image();
+    objects[length].options = {};
+    objects[length].options.height = Math.round(window.innerHeight * size);
+    objects[length].options.width = Math.round(objects[length].options.height * 0.7);
+    objects[length].image.src = imgSrc;
+
+    objects[length].image.onload = function() {
+      context.drawImage(objects[length].image, 
+                        pos.x - objects[length].options.width / 2, 
+                        pos.y - objects[length].options.height / 2, 
+                        objects[length].options.width,
+                        objects[length].options.height); 
     }
-    myFace.src = imgSrc;
   }
 
-  function clearCanvas(ctx, canv) {
-    ctx.clearRect(0, 0, canv.width, canv.height);
+  function clearCanvas(context, canv) {
+    context.clearRect(0, 0, canv.width, canv.height);
   }
 
   function brushesSetUp(brushes) {
@@ -154,9 +165,5 @@
       brush.appendChild(brushImg);
       brushes.appendChild(brush);
     }
-  }
-
-  function makeItSelected(target) {
-
   }
 })();
