@@ -2,7 +2,7 @@
   var canvas,
     context,
     objects = [];
-  console.log('huy huyushki');
+
   window.onload = function() {
     var imgSrc = '';
     var isDefault = true;
@@ -91,11 +91,10 @@
       isDefault = false;
     });
 
-    sizeRange.addEventListener('change', function() {
-      sizeExamp.height = window.innerHeight * sizeRange.value / 100;
-      var tools = document.getElementById('tools');
-      tools.height = window.innerHeight;
-    }, false);
+    $('#size').on('mousemove change', function() {
+      sizeExamp.height = window.innerHeight * $(this).val() / 100;
+      $('#tools').height(window.innerHeight);
+    });
 
     CHBshouldIStop.addEventListener('click', function(e) {
       if (e.target.checked) {
@@ -150,7 +149,8 @@
   }
 
   function clearCanvas(context, canv) {
-    context.clearRect(0, 0, canv.width, canv.height);
+    // context.clearRect(0, 0, canv.width, canv.height);
+    canv.width = canv.width;
   }
 
   function brushesSetUp(brushes) {
