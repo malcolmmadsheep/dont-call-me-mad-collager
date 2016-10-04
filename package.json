@@ -5,6 +5,7 @@
   "main": "webpack.config.js",
   "scripts": {
     "start": "webpack --watch --colors --progress",
+    "build": "webpack --colors --progress",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
