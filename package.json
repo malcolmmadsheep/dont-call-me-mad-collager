@@ -4,6 +4,7 @@
   "description": "**Author**: Vladislav Zhuk; <br /> **Telegram**: @vladislavzhuk / +38(066)041-94-95; <br /> **Email**: malcolm.madsheep@gmail.com; <br /> **Skype**: malcolm.madsheep; <br /> **Website**: [malcolmmadsheep.com](http://malcolmmadsheep.com/);",
   "main": "webpack.config.js",
   "scripts": {
+    "start": "webpack --watch --colors --progress",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -25,7 +26,8 @@
     "sass-loader": "^4.0.2",
     "style-loader": "^0.13.1",
     "webpack": "^1.13.2",
-    "webpack-dev-server": "^1.16.1"
+    "webpack-dev-server": "^1.16.1",
+    "webpack-livereload-plugin": "^0.8.2"
   },
   "dependencies": {}
 }

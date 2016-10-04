@@ -1,22 +1,31 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
-	<head>
-    <title>Malcolm&apos;s Face</title>
-		<meta charset="utf-8"  />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="img/favicon.gif" type="image/gif" sizes="16x16">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-	</head>
-	<body>
-    <section id="tools-box">
-      
-    </section>
-    <section id="workspace">
 
-    </section>
-    <footer id="status-bar">
+<head>
+  <title>Malcolm&apos;s Face</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="img/favicon.gif" type="image/gif" sizes="16x16">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+</head>
 
-    </footer>
+<body>
+  <section id="tools-box" class="work-block">
+    <div id="brush-preview-box">
+      <h3>Brush previes:</h3>
+      <img src="" id="preview-brush" alt="Brush view and size preview" />
+      <input type="range" min="1" max="21" defaultValue="10" />
+    </div>
+    <div id="brushes"></div>
+  </section>
+  <section id="workspace" class="work-block">
+    <canvas id="field"></canvas>
+  </section>
+  <footer id="status-bar">
+    <div class="properties">
+      X: <span id="mouse-x">NaN</span> Y: <span id="mouse-y">NaN</span>
+    </div>
+  </footer>
   <!--<div id="tools">
     <h2>Face size: </h2>
     <input type="range" id="size" min="7" max="27" step="1" value="17"/><br />
@@ -27,6 +36,7 @@
     <button id="rand">Random faces</button>
     <button id="clearCanvas">Clear</button>
   </div> -->
-    <script src="./build/bundle.js"></script>
-	</body>
+  <script src="./build/bundle.js"></script>
+</body>
+
 </html>

@@ -2,13 +2,14 @@
 
 const path = require('path');
 const webpack = require('webpack');
+const LiveReloadPlugin = require('webpack-livereload-plugin');
 
 const config = {
   entry: './sources/scripts/main.js',
   output: {
     path: './build/',
     filename: 'bundle.js',
-    publicPath: 'http://localhost:3000/collager/'
+    publicPath: '/collager/'
   },
   resolve: {
     root: [path.join(__dirname, 'sources')],
@@ -26,7 +27,10 @@ const config = {
         include: path.join(__dirname, 'sources/styles')
       }
     ]
-  }
+  },
+  plugins: [
+    new LiveReloadPlugin()
+  ]
 };
 
 module.exports = config;
