@@ -1,0 +1,26 @@
+{
+  "name": "collager",
+  "version": "1.0.0",
+  "description": "**Author**: Vladislav Zhuk; <br /> **Telegram**: @vladislavzhuk / +38(066)041-94-95; <br /> **Email**: malcolm.madsheep@gmail.com; <br /> **Skype**: malcolm.madsheep; <br /> **Website**: [malcolmmadsheep.com](http://malcolmmadsheep.com/);",
+  "main": "webpack.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/malcolmmadsheep/collager.git"
+  },
+  "author": "Vladislav Zhuk <malcolm.madsheep@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/malcolmmadsheep/collager/issues"
+  },
+  "homepage": "https://gitlab.com/malcolmmadsheep/collager#README",
+  "devDependencies": {
+    "babel-core": "^6.17.0",
+    "babel-loader": "^6.2.5",
+    "babel-preset-es2015": "^6.16.0",
+    "webpack": "^1.13.2",
+    "webpack-dev-server": "^1.16.1"
+  }
+}
