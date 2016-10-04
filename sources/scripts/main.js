@@ -1,4 +1,7 @@
-﻿(function() {
+﻿'use strict';
+
+import 'styles/main.scss';
+(function() {
   var canvas,
     context,
     objects = [];
