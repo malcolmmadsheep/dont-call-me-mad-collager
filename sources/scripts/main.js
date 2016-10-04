@@ -8,6 +8,16 @@ import * as appUtils from './utils';
   const CANVAS = document.getElementById('field');
   const CTX = CANVAS.getContext('2d');
   const objects = [];
+  const configs = {
+    mouse: {
+      x: 0,
+      y: 0
+    }
+  };
+  const statusBoxElements = {
+    xValueCoordinate: document.getElementById('mouse-x'),
+    yValueCoordinate: document.getElementById('mouse-y')
+  }
 
   window.onload = function() {
     const toolBoxElements = prerender();
@@ -20,6 +30,7 @@ import * as appUtils from './utils';
     const { previewBrush } = previewBox;
     const brushes = appUtils.toArray(brushesBox.children);
     setBrushesEventHandlers(brushes, previewBrush);
+    setCanvasListeners(CANVAS);
 
     // var imgSrc = '';
     // var isDefault = true;
@@ -130,7 +141,7 @@ import * as appUtils from './utils';
 
         brushes.forEach(brush => brush.classList.remove('selected'));
         currentBrush.classList.add('selected');
-        
+
         previewBrush.src = currentBrushSource;
       }, false);
     });
@@ -138,22 +149,30 @@ import * as appUtils from './utils';
     return brushes;
   }
 
-  // window.onresize = function() {
-  //   canvasResizing(canvas);
-  // }
+  function setCanvasListeners(canvas) {
+    canvas.addEventListener('mousemove', onCanvasMouseCoordinatesUpdateHandler, false);
+    canvas.addEventListener('mouseleave', onCanvasMouseLeaveHandler, false);
+  }
 
-  // function canvasCreation() {
-  //   $canvas = document.createElement('canvas');
-  //   $canvas.width = window.innerWidth - window.innerWidth / 20 * 3;
-  //   $canvas.height = window.innerHeight;
-  //   $canvas.id = 'myCanvas';
-  //   document.body.appendChild($canvas);
-  // }
+  function onCanvasMouseCoordinatesUpdateHandler(event) {
+    const canvas = event.target;
+    const boundingRect = canvas.getBoundingClientRect();
+    const boundX = boundingRect.x;
+    const boundY = boundingRect.y;
+    const X = event.clientX - Math.round(boundX);
+    const Y = event.clientY - Math.round(boundY);
 
-  // function canvasResizing(can) {
-  //   can.width = window.innerWidth;
-  //   can.height = window.innerHeight;
-  // }
+    statusBoxElements.xValueCoordinate.textContent = X;
+    statusBoxElements.yValueCoordinate.textContent = Y;
+
+    // console.log(`X: ${X}; Y: ${Y}`);
+    // console.log(`bX: ${boundingRect.x}; bY: ${boundingRect.y};`);
+  }
+
+  function onCanvasMouseLeaveHandler(event) {
+    statusBoxElements.xValueCoordinate.textContent = 0;
+    statusBoxElements.yValueCoordinate.textContent = 0;
+  }
 
   // function getMousePos(c, evt) {
   //   var rect = c.getBoundingClientRect();

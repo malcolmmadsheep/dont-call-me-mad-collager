@@ -1,8 +1,9 @@
-﻿$status-bar-height: 5%;
+﻿$status-bar-height: 3%;
 $main-blocks-heigth: 100% - $status-bar-height;
 $tools-box-width: 15%;
 $workspace-width: 100% - $tools-box-width;
-
+$canvas-width: 1024px;
+$canvas-height: 576px;
 * {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
@@ -30,25 +31,24 @@ body {
   width: $tools-box-width;
   text-align: center;
   background-color: #72b7ff;
-
   #brush-preview-box {
     h3 {
       margin: 10px 0 5px 0;
     }
-
-    #preview-brush {
-      width: 50%;
+    .preview-brush-container {
+      width: 90%;
+      height: 10%;
+      #preview-brush {
+        max-height: 100%;
+      }
     }
-
     input[type="range"] {
       width: 80%;
-
       &::-moz-focus-outer {
         border: 0;
       }
     }
   }
-
   #brushes {
     display: flex;
     flex-wrap: wrap;
@@ -57,12 +57,10 @@ body {
     height: 35%;
     overflow-y: auto;
     margin: 10px 10% 0 10%;
-
     .brush-item {
       width: 50%;
-
       &.selected {
-        border: 1px solid #160480;
+        border: 1px solid #125fa9;
       }
     }
   }
@@ -72,15 +70,15 @@ body {
   position: absolute;
   top: 0;
   left: $tools-box-width;
+  min-width: $canvas-width;
   width: $workspace-width;
   background-color: #8c8c8c;
   display: flex;
   align-items: center;
   justify-content: center;
-
   #field {
-    width: 90%;
-    height: 90%;
+    width: $canvas-width;
+    height: $canvas-height;
     background-color: #fff;
   }
 }
@@ -94,7 +92,6 @@ body {
   display: flex;
   align-items: center;
   background-color: #deaaff;
-  
   .properties {
     width: 95%;
     margin-left: 2.5%;
