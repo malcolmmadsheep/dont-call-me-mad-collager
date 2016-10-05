@@ -16,7 +16,7 @@ const picturesSources = [
 ].map(filename => (`${picturesDirectory}/${filename}`));
 
 export default function render() {
-  const previewBox = renderPreviewBox(picturesSources);
+  const previewBox = renderBrushSettingsBox(picturesSources);
   const brushPreview = previewBox.getChild('brushPreview');
   const brushesBox = renderBrushplate(picturesSources, brushPreview.getAttr('src'));
 
@@ -42,13 +42,13 @@ function appendChildren(children, to) {
   children.forEach(child => to.append(child));
 }
 
-function renderPreviewBox(sources) {
-  const previewBox = new DOMElement(document.getElementById('brush-preview-box'));
+function renderBrushSettingsBox(sources) {
+  const brushSettingsBox = new DOMElement(document.getElementById('brush-settings-box'));
   const previewBrush = createPreviewBrush(sources);
 
-  previewBox.addChild('brushPreview', previewBrush);
+  brushSettingsBox.addChild('brushPreview', previewBrush);
 
-  return previewBox;
+  return brushSettingsBox;
 }
 
 function createPreviewBrush(sources) {

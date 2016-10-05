@@ -3,9 +3,12 @@
 const document = window.document;
 
 export default class DOMElement {
-  constructor(element) {
+  constructor(element, children) {
     this._self = element;
-    this._children = null;
+    this._children = {};
+    if (children) {
+      this.addChildren(children);
+    }
     this._methods = {};
   }
 
@@ -13,11 +16,13 @@ export default class DOMElement {
     return this._self;
   }
 
-  addChild(childName, child, render) {
-    if (!this._children) {
-      this._children = {};
-    }
+  appendTo(domElement) {
+    domElement.appendChild(this._self);
 
+    return this;
+  }
+
+  addChild(childName, child, render) {
     if (Object.keys(this._children).includes(childName)) {
       throw new Error(`Child exists. Child with name "${childName}" already exists.`);
     }
@@ -58,9 +63,8 @@ export default class DOMElement {
     listeners.forEach(listener => {
       const { name, callback } = listener;
 
-      this._self.addEventListener(name, callback, false);
+      this._self.addEventListener(name, callback.bind(this), false);
     });
-
   }
 
   fireEvent(customEvent) {
@@ -143,11 +147,19 @@ export default class DOMElement {
     } else if (children.hasOwnProperty(childName)) {
       return children[childName];
     } else {
+      let necessaryChild;
+
       for (let elementName in children) {
         const child = children[elementName];
 
-        return this._findChild(childName, child._children);
+        if (!child) {
+          throw new Error(`Wrong childname! There is no child with name "${elementName}".`)
+        }
+
+        necessaryChild = this._findChild(childName, child._children);
       }
+
+      return necessaryChild;
     }
   }
 }

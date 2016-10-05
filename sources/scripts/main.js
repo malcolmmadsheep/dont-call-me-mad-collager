@@ -10,10 +10,14 @@ import * as appUtils from './utils';
   const CANVAS_DRAWING_BUFFER_HEIGHT = 1050;
   const getElementById = document.getElementById.bind(document);
   const CANVAS = new DOMElement(getElementById('field'));
-  setupCanvasSettings(CANVAS.self);
+  const BODY = new DOMElement(document.body);
+  const DOMToolsBox = new DOMElement(getElementById('tools-box'));
+  const DOMWorkspace = new DOMElement(getElementById('workspace'));
+  const DOMStatusBar = new DOMElement(getElementById('status-bar'));
   const CTX = CANVAS.self.getContext('2d');
   const objects = [];
   const configs = {
+    preview: {},
     mouse: {
       isDown: false,
       pos: {
@@ -27,44 +31,18 @@ import * as appUtils from './utils';
       detail: configs.mouse.pos
     })
   };
-
-  const BODY = new DOMElement(document.body);
-  const DOMToolsBox = new DOMElement(getElementById('tools-box'));
-  const DOMWorkspace = new DOMElement(getElementById('workspace'));
-  const DOMStatusBar = new DOMElement(getElementById('status-bar'));
-
-  const mousePosBox = new DOMElement(getElementById('mouse-position-box'));
-  mousePosBox.addChild('mouse-x', new DOMElement(getElementById('mouse-x')))
-    .addChild('mouse-y', new DOMElement(getElementById('mouse-y')));
-  DOMStatusBar.addChild('mousePosBox', mousePosBox);
+  let mousePosBox;
 
   window.onload = function() {
-    const toolBoxElements = prerender();
-    const previewBrushScaleRange = new DOMElement(getElementById('preview-brush-scale'));
+    setToolsBoxItems(DOMToolsBox);
+    setWorkspaceItems(DOMWorkspace);
+    setStatusBarItems(DOMStatusBar);
 
-    BODY.addChild('DOMToolsBox', DOMToolsBox)
-      .addChild('DOMWorkspace', DOMWorkspace)
-      .addChild('DOMStatusBar', DOMStatusBar);
-
-    DOMToolsBox.addChildren(toolBoxElements)
-      .addChild('previewBrushScaleRange', previewBrushScaleRange);
-
-    DOMWorkspace.addChild('canvas', CANVAS);
-
-    const brushPreview = DOMToolsBox.getChild('brushPreview');
-    const brushes = DOMToolsBox.getChild('brushesBox').childrenToArray();
-    setBrushesEventHandlers(brushes, brushPreview);
-    setCanvasListeners(DOMWorkspace.getChild('canvas'));
-
-    mousePosBox.addListeners([{
-      name: 'onMousePosChange',
-      callback(customEvent) {
-        const { detail } = customEvent;
-
-        mousePosBox.getChild('mouse-x').self.textContent = detail.x;
-        mousePosBox.getChild('mouse-y').self.textContent = detail.y;
-      }
-    }]);
+    BODY.addChildren({
+      DOMToolsBox,
+      DOMWorkspace,
+      DOMStatusBar
+    });
 
     CANVAS.register('clear', clearCanvas);
     CTX.fillStyle = "rgb(200,0,0)"; // sets the color to fill in the rectangle with
@@ -73,14 +51,9 @@ import * as appUtils from './utils';
 
     // var imgSrc = '';
     // var isDefault = true;
-    // var brushes = document.getElementById('brushes');
     // var randBtn = document.getElementById('rand');
     // var mouseIsDown = false;
     // var dontStop = false;
-    // canvasCreation();
-    // brushesSetUp(brushes);
-    // canvas = document.getElementById('myCanvas');
-    // ctx = canvas.getContext('2d');
     // var CHBshouldIStop = document.getElementById('shouldIStop');
     // var sizeRange = document.getElementById('size');
     // var sizeExamp = document.getElementById('examplePic');
@@ -172,9 +145,69 @@ import * as appUtils from './utils';
     // }, false);
   }
 
+  function setToolsBoxItems(toolsBox) {
+    const canvasSettingsBox = new DOMElement(getElementById('canvas-settings-box'));
+    const brushPreviewChildren = prerender();
+    const brushSettingsBox = new DOMElement(getElementById('brush-settings-box'), brushPreviewChildren);
+    const previewBrushScaleRange = new DOMElement(getElementById('preview-brush-scale'));
+    const canvasWidthField = new DOMElement(getElementById('canvas-width'));
+    const canvasHeightField = new DOMElement(getElementById('canvas-height'));
+
+    brushSettingsBox.addChild('previewBrushScaleRange', previewBrushScaleRange);
+    canvasSettingsBox.addChildren({
+      canvasWidthField,
+      canvasHeightField
+    });
+
+    const brushPreview = brushSettingsBox.getChild('brushPreview');
+    const brushes = brushSettingsBox.getChild('brushesBox').childrenToArray();
+    setBrushesEventHandlers(brushes, brushPreview);
+
+    toolsBox.addChildren({
+      brushSettingsBox,
+      canvasSettingsBox
+    });
+
+    return toolsBox;
+  }
+
+  function setWorkspaceItems(workspace) {
+    workspace.addChild('canvas', CANVAS);
+    mousePosBox = new DOMElement(getElementById('mouse-position-box'));
+
+    mousePosBox.addChildren({
+      'mouse-x': new DOMElement(getElementById('mouse-x')),
+      'mouse-y': new DOMElement(getElementById('mouse-y'))
+    });
+
+    mousePosBox.addListeners([{
+      name: 'onMousePosChange',
+      callback(customEvent) {
+        const { detail } = customEvent;
+
+        this.getChild('mouse-x').setProp('textContent', detail.x);
+        this.getChild('mouse-y').setProp('textContent', detail.y);
+      }
+    }]);
+
+    CANVAS.addListeners([
+      { name: 'mousemove', callback: onCanvasMouseCoordinatesUpdateHandler },
+      { name: 'mouseleave', callback: onCanvasMouseLeaveHandler }
+    ]);
+    setupCanvasSettings(CANVAS);
+
+    return workspace;
+  }
+
+  function setStatusBarItems(statusBar) {
+    statusBar.addChild('mousePosBox', mousePosBox);
+
+    return statusBar;
+  }
+
   function clearCanvas(options) {
     const ctx = options.ctx;
-    // this.setProp('width', this.getProp('width'));
+
     ctx.clearRect(0, 0, this.getProp('width'), this.getProp('height'));
   }
 
@@ -199,13 +232,6 @@ import * as appUtils from './utils';
 
       brushPreview.setAttr('src', currentBrushSource);
     }
-  }
-
-  function setCanvasListeners(canvas) {
-    canvas.addListeners([
-      { name: 'mousemove', callback: onCanvasMouseCoordinatesUpdateHandler },
-      { name: 'mouseleave', callback: onCanvasMouseLeaveHandler }
-    ]);
   }
 
   function onCanvasMouseCoordinatesUpdateHandler(event) {
@@ -238,8 +264,11 @@ import * as appUtils from './utils';
   }
 
   function setupCanvasSettings(canvas) {
-    canvas.width = CANVAS_DRAWING_BUFFER_WIDTH;
-    canvas.height = CANVAS_DRAWING_BUFFER_HEIGHT;
+    canvas.setProp('width', CANVAS_DRAWING_BUFFER_WIDTH)
+      .setProp('height', CANVAS_DRAWING_BUFFER_HEIGHT);
+
+    DOMToolsBox.getChild('canvasWidthField').setAttr('value', CANVAS_DRAWING_BUFFER_WIDTH);
+    DOMToolsBox.getChild('canvasHeightField').setAttr('value', CANVAS_DRAWING_BUFFER_HEIGHT);
   }
   // function createObject(pos, imgSrc, size) {
   //   var length = objects.length;

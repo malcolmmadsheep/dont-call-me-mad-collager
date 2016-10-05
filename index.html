@@ -11,21 +11,27 @@
 
 <body>
   <section id="tools-box" class="work-block">
-    <div id="canvas-settings">
+    <div id="canvas-settings-box">
       <h3>Canvas settings:</h3>
       <div id="settings">
         <h4>Image size:</h4>
         W: <input type="text" id="canvas-width" class="narrow-width"> H: <input type="text" id="canvas-height" class="narrow-width">
       </div>
     </div>
-    <div id="brush-preview-box">
-      <h3>Brush previes:</h3>
-      <div class="preview-brush-container">
-        <img src="" id="preview-brush" alt="Brush view and size preview" />
+    <div id="brush-settings-box">
+      <h3>Brush settings:</h3>
+      <div id="brush-preview-box">
+        <h4>Brush preview:</h4>
+        <div class="preview-brush-container">
+          <img src="" id="preview-brush" alt="Brush view and size preview" />
+        </div>
+        <input type="range" id="preview-brush-scale" min="1" max="21" defaultValue="10" step="1" />
       </div>
-      <input type="range" id="preview-brush-scale" min="1" max="21" defaultValue="10" step="1" />
+      <div id="brushes-list">
+        <h4>Brushes list:</h4>
+        <div id="brushes"></div>
+      </div>
     </div>
-    <div id="brushes"></div>
   </section>
   <section id="workspace" class="work-block">
     <canvas id="field"></canvas>
@@ -37,16 +43,6 @@
       </div>
     </div>
   </footer>
-  <!--<div id="tools ">
-    <h2>Face size: </h2>
-    <input type="range " id="size " min="7 " max="27 " step="1 " value="17 "/><br />
-    <img src="img/4.png " alt="Example brush size " id="examplePic "/><br />
-    <p><span>Don&apos;t stop it! </span><input type="checkbox " id="shouldIStop " /></p>
-    <div id="brushes ">
-    </div>
-    <button id="rand ">Random faces</button>
-    <button id="clearCanvas ">Clear</button>
-  </div> -->
   <script src="./build/bundle.js "></script>
 </body>
 

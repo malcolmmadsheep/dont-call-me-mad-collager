@@ -31,41 +31,49 @@ body {
   width: $tools-box-width;
   text-align: center;
   background-color: #72b7ff;
-  #canvas-settings {
+  overflow-y: auto;
+  #canvas-settings-box {
     .narrow-width {
       width: 30%;
     }
   }
-  #brush-preview-box {
-    h3 {
-      margin: 10px 0 5px 0;
-    }
-    .preview-brush-container {
-      width: 90%;
-      height: 10%;
-      #preview-brush {
-        max-height: 100%;
+  #brush-settings-box {
+    height: 75%;
+    #brush-preview-box {
+      h3 {
+        margin: 10px 0 5px 0;
+      }
+      .preview-brush-container {
+        width: 90%;
+        height: 10%;
+        #preview-brush {
+          max-height: 100%;
+        }
+      }
+      input[type="range"] {
+        width: 80%;
+        &::-moz-focus-outer {
+          border: 0;
+        }
       }
     }
-    input[type="range"] {
-      width: 80%;
-      &::-moz-focus-outer {
-        border: 0;
-      }
-    }
-  }
-  #brushes {
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
-    width: 80%;
-    height: 35%;
-    overflow-y: auto;
-    margin: 10px 10% 0 10%;
-    .brush-item {
-      width: 50%;
-      &.selected {
-        border: 1px solid #125fa9;
+    #brushes-list {
+      width: 100%;
+      height: 40%;
+      #brushes {
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: row;
+        width: 80%;
+        height: 100%;
+        overflow-y: auto;
+        margin: 10px 10% 0 10%;
+        .brush-item {
+          width: 50%;
+          &.selected {
+            border: 1px solid #125fa9;
+          }
+        }
       }
     }
   }
