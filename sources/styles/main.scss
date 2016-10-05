@@ -31,6 +31,11 @@ body {
   width: $tools-box-width;
   text-align: center;
   background-color: #72b7ff;
+  #canvas-settings {
+    .narrow-width {
+      width: 30%;
+    }
+  }
   #brush-preview-box {
     h3 {
       margin: 10px 0 5px 0;

@@ -11,12 +11,19 @@
 
 <body>
   <section id="tools-box" class="work-block">
+    <div id="canvas-settings">
+      <h3>Canvas settings:</h3>
+      <div id="settings">
+        <h4>Image size:</h4>
+        W: <input type="text" id="canvas-width" class="narrow-width"> H: <input type="text" id="canvas-height" class="narrow-width">
+      </div>
+    </div>
     <div id="brush-preview-box">
       <h3>Brush previes:</h3>
       <div class="preview-brush-container">
         <img src="" id="preview-brush" alt="Brush view and size preview" />
       </div>
-      <input type="range" min="1" max="21" defaultValue="10" step="1" />
+      <input type="range" id="preview-brush-scale" min="1" max="21" defaultValue="10" step="1" />
     </div>
     <div id="brushes"></div>
   </section>
@@ -25,7 +32,7 @@
   </section>
   <footer id="status-bar">
     <div class="properties">
-      <div id="mouse-coordinates-box">
+      <div id="mouse-position-box">
         X: <span id="mouse-x">0</span>; Y: <span id="mouse-y">0</span>;
       </div>
     </div>

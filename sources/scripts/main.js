@@ -6,48 +6,70 @@ import DOMElement from './DOMElement';
 import * as appUtils from './utils';
 
 (function(window) {
-  const CANVAS = document.getElementById('field');
-  const CTX = CANVAS.getContext('2d');
+  const CANVAS_DRAWING_BUFFER_WIDTH = 1680;
+  const CANVAS_DRAWING_BUFFER_HEIGHT = 1050;
+  const getElementById = document.getElementById.bind(document);
+  const CANVAS = new DOMElement(getElementById('field'));
+  setupCanvasSettings(CANVAS.self);
+  const CTX = CANVAS.self.getContext('2d');
   const objects = [];
   const configs = {
-    canvasMousePosition: {
-      x: 0,
-      y: 0
+    mouse: {
+      isDown: false,
+      pos: {
+        x: 0,
+        y: 0
+      }
     }
   };
-  // const statusBoxElements = {
-  //   xValueCoordinate: document.getElementById('mouse-x'),
-  //   yValueCoordinate: document.getElementById('mouse-y')
-  // }
   const customEvents = {
-    onMouseCoordinatesChange: new CustomEvent('onMouseCoordinatesChange', {
-      detail: configs.canvasMousePosition
+    onMouseCoordinatesChange: new CustomEvent('onMousePosChange', {
+      detail: configs.mouse.pos
     })
   };
-  const DOMElements = {
-    toolsBox: new DOMElement(document.getElementById('tools-box')),
-    workspace: new DOMElement(document.getElementById('workspace')),
-    statusBar: new DOMElement(document.getElementById('status-bar'))
-  }
+
+  const BODY = new DOMElement(document.body);
+  const DOMToolsBox = new DOMElement(getElementById('tools-box'));
+  const DOMWorkspace = new DOMElement(getElementById('workspace'));
+  const DOMStatusBar = new DOMElement(getElementById('status-bar'));
+
+  const mousePosBox = new DOMElement(getElementById('mouse-position-box'));
+  mousePosBox.addChild('mouse-x', new DOMElement(getElementById('mouse-x')))
+    .addChild('mouse-y', new DOMElement(getElementById('mouse-y')));
+  DOMStatusBar.addChild('mousePosBox', mousePosBox);
 
   window.onload = function() {
     const toolBoxElements = prerender();
-    const {
-      brushesBox,
-      previewBox
-    } = toolBoxElements;
-    const DOMToolsBox = DOMElements.toolsBox;
-    const DOMWorkspace = DOMElements.toolsBox;
-    const DOMStatusBar = DOMElements.statusBar;
+    const previewBrushScaleRange = new DOMElement(getElementById('preview-brush-scale'));
 
-    DOMToolsBox.addChild('previewBox', previewBox);
+    BODY.addChild('DOMToolsBox', DOMToolsBox)
+      .addChild('DOMWorkspace', DOMWorkspace)
+      .addChild('DOMStatusBar', DOMStatusBar);
 
-    console.log(DOMToolsBox.getChild('previewBox'));
+    DOMToolsBox.addChildren(toolBoxElements)
+      .addChild('previewBrushScaleRange', previewBrushScaleRange);
 
-    const { previewBrush } = previewBox;
-    const brushes = appUtils.toArray(brushesBox.children);
-    setBrushesEventHandlers(brushes, previewBrush);
-    setCanvasListeners(CANVAS);
+    DOMWorkspace.addChild('canvas', CANVAS);
+
+    const brushPreview = DOMToolsBox.getChild('brushPreview');
+    const brushes = DOMToolsBox.getChild('brushesBox').childrenToArray();
+    setBrushesEventHandlers(brushes, brushPreview);
+    setCanvasListeners(DOMWorkspace.getChild('canvas'));
+
+    mousePosBox.addListeners([{
+      name: 'onMousePosChange',
+      callback(customEvent) {
+        const { detail } = customEvent;
+
+        mousePosBox.getChild('mouse-x').self.textContent = detail.x;
+        mousePosBox.getChild('mouse-y').self.textContent = detail.y;
+      }
+    }]);
+
+    CANVAS.register('clear', clearCanvas);
+    CTX.fillStyle = "rgb(200,0,0)"; // sets the color to fill in the rectangle with
+    CTX.fillRect(10, 10, 55, 50);
+    // CANVAS.run('clear', {ctx: CTX});
 
     // var imgSrc = '';
     // var isDefault = true;
@@ -150,65 +172,75 @@ import * as appUtils from './utils';
     // }, false);
   }
 
-  function setBrushesEventHandlers(brushes, previewBrush) {
+  function clearCanvas(options) {
+    const ctx = options.ctx;
+    // this.setProp('width', this.getProp('width'));
+    ctx.clearRect(0, 0, this.getProp('width'), this.getProp('height'));
+  }
+
+  function setBrushesEventHandlers(brushes, brushPreview) {
     brushes.forEach(brush => {
-      brush.addEventListener('click', (event) => {
-        const currentBrush = event.target;
-        const currentBrushSource = currentBrush.src;
-
-        brushes.forEach(brush => brush.classList.remove('selected'));
-        currentBrush.classList.add('selected');
-
-        previewBrush.src = currentBrushSource;
-      }, false);
+      brush.addListeners([{
+        name: 'click',
+        callback: setBrushListener(brushes, brushPreview)
+      }]);
     });
 
     return brushes;
   }
 
+  function setBrushListener(brushes, brushPreview) {
+    return (event) => {
+      const currentBrush = event.target;
+      const currentBrushSource = currentBrush.src;
+
+      brushes.forEach(brush => brush.removeClass('selected'));
+      currentBrush.classList.add('selected');
+
+      brushPreview.setAttr('src', currentBrushSource);
+    }
+  }
+
   function setCanvasListeners(canvas) {
-    canvas.addEventListener('mousemove', onCanvasMouseCoordinatesUpdateHandler, false);
-    canvas.addEventListener('mouseleave', onCanvasMouseLeaveHandler, false);
+    canvas.addListeners([
+      { name: 'mousemove', callback: onCanvasMouseCoordinatesUpdateHandler },
+      { name: 'mouseleave', callback: onCanvasMouseLeaveHandler }
+    ]);
   }
 
   function onCanvasMouseCoordinatesUpdateHandler(event) {
-    const mousePos = configs.canvasMousePosition;
-
-    // statusBoxElements.xValueCoordinate.textContent = X;
-    // statusBoxElements.yValueCoordinate.textContent = Y;
-
-    // console.log(`X: ${X}; Y: ${Y}`);
-    // console.log(`bX: ${boundingRect.x}; bY: ${boundingRect.y};`);
-
+    updateMouseCoordinates(configs.mouse.pos, event);
   }
 
-  function updateMouseCoordinates(mousePos, event) {
-    const canvas = event.target;
-    const boundingRect = canvas.getBoundingClientRect();
-    const boundX = boundingRect.x;
-    const boundY = boundingRect.y;
-    const X = event.clientX - Math.round(boundX);
-    const Y = event.clientY - Math.round(boundY);
+  function onCanvasMouseLeaveHandler(event) {
+    updateMouseCoordinates(configs.mouse.pos, event, { x: 0, y: 0 });
+  }
+
+  function updateMouseCoordinates(mousePos, event, value) {
+    let X, Y;
+
+    if (!value) {
+      const canvas = event.target;
+      const boundingRect = canvas.getBoundingClientRect();
+      const boundX = boundingRect.left;
+      const boundY = boundingRect.top;
+      X = event.clientX - Math.round(boundX);
+      Y = event.clientY - Math.round(boundY);
+    } else {
+      X = value.x;
+      Y = value.y;
+    }
 
     mousePos.x = X;
     mousePos.y = Y;
 
-
+    mousePosBox.fireEvent(customEvents.onMouseCoordinatesChange);
   }
 
-  function onCanvasMouseLeaveHandler(event) {
-    statusBoxElements.xValueCoordinate.textContent = 0;
-    statusBoxElements.yValueCoordinate.textContent = 0;
+  function setupCanvasSettings(canvas) {
+    canvas.width = CANVAS_DRAWING_BUFFER_WIDTH;
+    canvas.height = CANVAS_DRAWING_BUFFER_HEIGHT;
   }
-
-  // function getMousePos(c, evt) {
-  //   var rect = c.getBoundingClientRect();
-  //   return {
-  //     x: evt.clientX - rect.left,
-  //     y: evt.clientY - rect.top
-  //   };
-  // }
-
   // function createObject(pos, imgSrc, size) {
   //   var length = objects.length;
   //   objects[length] = {};
@@ -224,25 +256,6 @@ import * as appUtils from './utils';
   //       pos.y - objects[length].options.height / 2,
   //       objects[length].options.width,
   //       objects[length].options.height);
-  //   }
-  // }
-
-  // function clearCanvas(ctx, canv) {
-  //   // ctx.clearRect(0, 0, canv.width, canv.height);
-  //   canv.width = canv.width;
-  // }
-
-  // function brushesSetUp(brushes) {
-  //   for (var i = 1; i < 11; i++) {
-  //     var brush = document.createElement('div');
-  //     brush.className = 'brush';
-  //     if (i % 2 === 0) {
-  //       brush.style.borderRight = '1px solid navy';
-  //     }
-  //     var brushImg = document.createElement('img');
-  //     brushImg.src = 'img/' + i + '.png';
-  //     brush. (brushImg);
-  //     brushes.appendChild(brush);
   //   }
   // }
 })(window);

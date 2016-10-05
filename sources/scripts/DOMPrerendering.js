@@ -17,8 +17,8 @@ const picturesSources = [
 
 export default function render() {
   const previewBox = renderPreviewBox(picturesSources);
-  const {previewBrush} = previewBox;
-  const brushesBox = renderBrushplate(picturesSources, previewBrush.src);
+  const brushPreview = previewBox.getChild('brushPreview');
+  const brushesBox = renderBrushplate(picturesSources, brushPreview.getAttr('src'));
 
   return {
     previewBox,
@@ -43,30 +43,36 @@ function appendChildren(children, to) {
 }
 
 function renderPreviewBox(sources) {
-  const previewBrush = setPreviewBrush(document.getElementById('preview-brush'), sources);
+  const previewBox = new DOMElement(document.getElementById('brush-preview-box'));
+  const previewBrush = createPreviewBrush(sources);
 
-  return {
-    previewBrush
-  };
+  previewBox.addChild('brushPreview', previewBrush);
+
+  return previewBox;
 }
 
-function setPreviewBrush(previewBrush, sources) {
-  const src = sources[0];
-
-  previewBrush.src = src;
+function createPreviewBrush(sources) {
+  const previewBrush = new DOMElement(document.getElementById('preview-brush'));
+  previewBrush.setProp('src', sources[0]);
 
   return previewBrush;
 }
 
 function renderBrushplate(sources, selectedItemSource) {
-  const brushes = sources.map(source => createElement('img', {
+  const brushes = sources.map(source => new DOMElement(createElement('img', {
     src: source,
     className: `brush-item`
-  }));
-  brushes[0].classList.add('selected');
-  const brushesContainer = document.getElementById('brushes');
+  })));
+  brushes[0].addClass('selected');
+  const brushesContainer = new DOMElement(document.getElementById('brushes'));
 
-  appendChildren(brushes, brushesContainer);
+  const brushesCount = brushes.length;
+  let i = 0;
+
+  while (i < brushesCount) {
+    brushesContainer.addChild(`brush-${i}`, brushes[i], true);
+    i += 1;
+  }
 
   return brushesContainer;
 }
