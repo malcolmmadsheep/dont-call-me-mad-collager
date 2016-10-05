@@ -1,5 +1,6 @@
 'use strict';
 
+import DOMElement from './DOMElement';
 const picturesDirectory = './public/images';
 const picturesSources = [
   '1.png',

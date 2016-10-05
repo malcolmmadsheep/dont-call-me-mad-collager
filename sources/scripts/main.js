@@ -2,6 +2,7 @@
 
 import 'styles/main.scss';
 import prerender from './DOMPrerendering';
+import DOMElement from './DOMElement';
 import * as appUtils from './utils';
 
 (function(window) {
@@ -9,23 +10,39 @@ import * as appUtils from './utils';
   const CTX = CANVAS.getContext('2d');
   const objects = [];
   const configs = {
-    mouse: {
+    canvasMousePosition: {
       x: 0,
       y: 0
     }
   };
-  const statusBoxElements = {
-    xValueCoordinate: document.getElementById('mouse-x'),
-    yValueCoordinate: document.getElementById('mouse-y')
+  // const statusBoxElements = {
+  //   xValueCoordinate: document.getElementById('mouse-x'),
+  //   yValueCoordinate: document.getElementById('mouse-y')
+  // }
+  const customEvents = {
+    onMouseCoordinatesChange: new CustomEvent('onMouseCoordinatesChange', {
+      detail: configs.canvasMousePosition
+    })
+  };
+  const DOMElements = {
+    toolsBox: new DOMElement(document.getElementById('tools-box')),
+    workspace: new DOMElement(document.getElementById('workspace')),
+    statusBar: new DOMElement(document.getElementById('status-bar'))
   }
 
   window.onload = function() {
     const toolBoxElements = prerender();
-
     const {
       brushesBox,
       previewBox
     } = toolBoxElements;
+    const DOMToolsBox = DOMElements.toolsBox;
+    const DOMWorkspace = DOMElements.toolsBox;
+    const DOMStatusBar = DOMElements.statusBar;
+
+    DOMToolsBox.addChild('previewBox', previewBox);
+
+    console.log(DOMToolsBox.getChild('previewBox'));
 
     const { previewBrush } = previewBox;
     const brushes = appUtils.toArray(brushesBox.children);
@@ -155,6 +172,17 @@ import * as appUtils from './utils';
   }
 
   function onCanvasMouseCoordinatesUpdateHandler(event) {
+    const mousePos = configs.canvasMousePosition;
+
+    // statusBoxElements.xValueCoordinate.textContent = X;
+    // statusBoxElements.yValueCoordinate.textContent = Y;
+
+    // console.log(`X: ${X}; Y: ${Y}`);
+    // console.log(`bX: ${boundingRect.x}; bY: ${boundingRect.y};`);
+
+  }
+
+  function updateMouseCoordinates(mousePos, event) {
     const canvas = event.target;
     const boundingRect = canvas.getBoundingClientRect();
     const boundX = boundingRect.x;
@@ -162,11 +190,10 @@ import * as appUtils from './utils';
     const X = event.clientX - Math.round(boundX);
     const Y = event.clientY - Math.round(boundY);
 
-    statusBoxElements.xValueCoordinate.textContent = X;
-    statusBoxElements.yValueCoordinate.textContent = Y;
+    mousePos.x = X;
+    mousePos.y = Y;
 
-    // console.log(`X: ${X}; Y: ${Y}`);
-    // console.log(`bX: ${boundingRect.x}; bY: ${boundingRect.y};`);
+
   }
 
   function onCanvasMouseLeaveHandler(event) {
@@ -214,7 +241,7 @@ import * as appUtils from './utils';
   //     }
   //     var brushImg = document.createElement('img');
   //     brushImg.src = 'img/' + i + '.png';
-  //     brush.appendChild(brushImg);
+  //     brush. (brushImg);
   //     brushes.appendChild(brush);
   //   }
   // }

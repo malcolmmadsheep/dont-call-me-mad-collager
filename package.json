@@ -4,7 +4,8 @@
   "description": "**Author**: Vladislav Zhuk; <br /> **Telegram**: @vladislavzhuk / +38(066)041-94-95; <br /> **Email**: malcolm.madsheep@gmail.com; <br /> **Skype**: malcolm.madsheep; <br /> **Website**: [malcolmmadsheep.com](http://malcolmmadsheep.com/);",
   "main": "webpack.config.js",
   "scripts": {
-    "start": "webpack --watch --colors --progress",
+    "start": "webpack-dev-server --colors --progress",
+    "dev": "webpack --watch --colors --progress",
     "build": "webpack --colors --progress",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
