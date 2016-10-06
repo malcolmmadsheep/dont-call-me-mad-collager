@@ -6,11 +6,12 @@ const config = {
   entry: './sources/scripts/main.js',
   output: {
     path: './build/',
-    filename: 'bundle.js',
-    publicPath: '/collager/'
+    filename: 'bundle.js'
   },
   resolve: {
-    root: [path.join(__dirname, 'sources')],
+    root: [
+      path.join(__dirname, 'sources')
+    ],
     extentions: ['', '.webpack.js', '.js']
   },
   module: {

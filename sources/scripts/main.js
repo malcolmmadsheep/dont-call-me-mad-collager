@@ -11,6 +11,7 @@ import * as utils from './utils';
   const DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT = 1050;
   const CANVAS = new DOMElement(getElementById('field'));
   const BODY = new DOMElement(document.body);
+  CANVAS.setStyle('background', 'url("public/images/transparent-bg.gif") repeat');
   const DEFAULT_CANVAS_CLIENT_WIDTH = CANVAS.getProp('clientWidth');
   const DEFAULT_CANVAS_CLIENT_HEIGHT = CANVAS.getProp('clientHeight');
 
@@ -337,10 +338,8 @@ import * as utils from './utils';
     const { backgroundColor, width, height, filling } = canvasConfigs;
 
     if (backgroundColor === 'transparent') {
-      CANVAS.setStyle('background', 'url("public/images/transparent-bg.gif") repeat');
       CTX.clearRect(0, 0, width.drawingBuffer, height.drawingBuffer);
     } else {
-      CANVAS.setStyle('background', '');
       CTX.fillStyle = backgroundColor;
       CTX.fillRect(0, 0, canvasConfigs.width.drawingBuffer, canvasConfigs.height.drawingBuffer);
       CTX.fillStyle = filling.previousColor;
