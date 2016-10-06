@@ -69,7 +69,7 @@ function renderBrushplate(sources, selectedItemSource) {
 
     return div.addChild('brush-example', img, true);
   });
-  console.log(brushes);
+
   brushes[0].addClass('selected');
   const brushesContainer = new DOMElement(document.getElementById('brushes'));
 

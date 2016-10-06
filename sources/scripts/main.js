@@ -9,6 +9,7 @@ import * as utils from './utils';
   const getElementById = document.getElementById.bind(document);
   const DEFAULT_CANVAS_DRAWING_BUFFER_WIDTH = 1680;
   const DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT = 1050;
+  const DEFAULT_CANVAS_WIDTH_HEIGHT_RATIO = DEFAULT_CANVAS_DRAWING_BUFFER_WIDTH / DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT;
   const CANVAS = new DOMElement(getElementById('field'));
   const BODY = new DOMElement(document.body);
   CANVAS.setStyle('background', 'url("public/images/transparent-bg.gif") repeat');
@@ -26,23 +27,26 @@ import * as utils from './utils';
         previousColor: '#fff',
         currentColor: '#fff'
       },
-      width: {
-        default: {
+      dim: {
+        width: {
+          default: {
+            client: DEFAULT_CANVAS_CLIENT_WIDTH,
+            drawingBuffer: DEFAULT_CANVAS_DRAWING_BUFFER_WIDTH
+          },
           client: DEFAULT_CANVAS_CLIENT_WIDTH,
-          drawingBuffer: DEFAULT_CANVAS_DRAWING_BUFFER_WIDTH
+          drawingBuffer: DEFAULT_CANVAS_DRAWING_BUFFER_WIDTH,
+          ratio: DEFAULT_CANVAS_DRAWING_BUFFER_WIDTH / DEFAULT_CANVAS_CLIENT_WIDTH
         },
-        client: DEFAULT_CANVAS_CLIENT_WIDTH,
-        drawingBuffer: DEFAULT_CANVAS_DRAWING_BUFFER_WIDTH,
-        ratio: DEFAULT_CANVAS_DRAWING_BUFFER_WIDTH / DEFAULT_CANVAS_CLIENT_WIDTH
-      },
-      height: {
-        default: {
-          client: DEFAULT_CANVAS_CLIENT_HEIGHT,
-          drawingBuffer: DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT
+        height: {
+          default: {
+            client: DEFAULT_CANVAS_CLIENT_HEIGHT,
+            drawingBuffer: DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT
+          },
+          client: Math.round(DEFAULT_CANVAS_CLIENT_WIDTH / DEFAULT_CANVAS_WIDTH_HEIGHT_RATIO),
+          drawingBuffer: DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT,
+          ratio: DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT / DEFAULT_CANVAS_CLIENT_HEIGHT
         },
-        client: DEFAULT_CANVAS_CLIENT_HEIGHT,
-        drawingBuffer: DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT,
-        ratio: DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT / DEFAULT_CANVAS_CLIENT_HEIGHT
+        widthHeightRatio: DEFAULT_CANVAS_WIDTH_HEIGHT_RATIO
       },
       backgroundColor: '#fff'
     },
@@ -192,9 +196,9 @@ import * as utils from './utils';
     const canvasTBgRadio = new DOMElement(getElementById('transparent-background-color-radio'));
     const canvasColorBgRadio = new DOMElement(getElementById('color-background-color-radio'));
     const canvasBgColorInput = new DOMElement(getElementById('background-color-input'));
-    const canvasConfigs = configs.canvas;
-    const dbw = canvasConfigs.width.drawingBuffer;
-    const dbh = canvasConfigs.height.drawingBuffer;
+    const canvasDimConfigs = configs.canvas.dim;
+    const dbw = canvasDimConfigs.width.drawingBuffer;
+    const dbh = canvasDimConfigs.height.drawingBuffer;
 
     canvasWidthField.addListeners([{
       name: 'blur',
@@ -275,7 +279,8 @@ import * as utils from './utils';
     const value = utils.checkNum(target.value);
 
     if (value && value > 0) {
-      const canvasPropertyConfigs = configs.canvas[propertyName];
+      const canvasDimConfigs = configs.canvas.dim;
+      const canvasPropertyConfigs = canvasDimConfigs[propertyName];
       if (canvasPropertyConfigs.drawingBuffer === value) {
         return;
       }
@@ -283,8 +288,37 @@ import * as utils from './utils';
       const newCanvasClientTypeValue = (value > defaultConfigs.client) ? defaultConfigs.client : value;
       canvasPropertyConfigs.drawingBuffer = value;
       canvasPropertyConfigs.client = newCanvasClientTypeValue;
-      canvasPropertyConfigs.ratio = value / newCanvasClientTypeValue;
+      // canvasPropertyConfigs.ratio = value / newCanvasClientTypeValue;
 
+      const { width, height } = canvasDimConfigs;
+      const drawingBufferRatio = width.drawingBuffer / height.drawingBuffer;
+      let newClientHeight, newClientWith, tempClientValue;
+      if (drawingBufferRatio > 1) {
+        const widthDef = width.default
+        tempClientValue = widthDef.client * drawingBufferRatio;
+        newClientWith = Math.min(widthDef.client, tempClientValue);
+        tempClientValue = widthDef.client / drawingBufferRatio;
+        newClientHeight = Math.min(height.default.client, tempClientValue);
+      } else if (drawingBufferRatio < 1) {
+        const heightDef = height.default;
+        tempClientValue = heightDef.client / drawingBufferRatio;
+        newClientHeight = Math.min(heightDef.client, tempClientValue);
+        tempClientValue = heightDef.client * drawingBufferRatio;
+        newClientWith = Math.min(width.default.client, tempClientValue);
+      } else {
+        console.log('huy');
+        tempClientValue = Math.min(height.default.client, width.default.client);
+        newClientHeight = newClientWith = Math.min(value, tempClientValue)
+      }
+
+      width.client = newClientWith;
+      height.client = newClientHeight;
+      console.log(width.client, height.client, width.drawingBuffer, height.drawingBuffer);
+      width.ratio = width.drawingBuffer / width.client;
+      height.ratio = height.drawingBuffer / height.client;
+      console.log(width.ratio, height.ratio);
+
+      console.log(canvasPropertyConfigs);
       const resolutionChangeCustomEvent = new CustomEvent('resolutionChange', {
         detail: {
           propName: propertyName,
@@ -335,13 +369,14 @@ import * as utils from './utils';
 
   function clearCanvas() {
     const canvasConfigs = configs.canvas;
-    const { backgroundColor, width, height, filling } = canvasConfigs;
+    const { backgroundColor, dim, filling } = canvasConfigs;
+    const { width, height } = dim;
 
     if (backgroundColor === 'transparent') {
       CTX.clearRect(0, 0, width.drawingBuffer, height.drawingBuffer);
     } else {
       CTX.fillStyle = backgroundColor;
-      CTX.fillRect(0, 0, canvasConfigs.width.drawingBuffer, canvasConfigs.height.drawingBuffer);
+      CTX.fillRect(0, 0, width.drawingBuffer, height.drawingBuffer);
       CTX.fillStyle = filling.previousColor;
     }
   }
@@ -388,19 +423,22 @@ import * as utils from './utils';
   function onCanvasResolutionChange(customEvent) {
     const { propName, drawingBuffer, client } = customEvent.detail;
     const { canvas } = configs;
+    const canvasDim = canvas.dim;
+    const { width, height } = canvasDim;
 
-    // const imageData = CTX.getImageData(0, 0, canvas.width.drawingBuffer, canvas.height.drawingBuffer);
-    this.setProp(propName, drawingBuffer);
-    this.setStyle(propName, utils.toPx(client));
-    console.log(canvas);
+    this.setProp('width', width.drawingBuffer)
+      .setStyle('width', utils.toPx(width.client))
+      .setProp('height', height.drawingBuffer)
+      .setStyle('height', utils.toPx(height.client));
+
     clearCanvas();
     redraw();
-    // CTX.putImageData(imageData, 0, 0);
   }
 
   function updateMouseCoordinates(mousePos, event, value) {
     let X, Y;
     const canvasConfigs = configs.canvas;
+    const canvasDim = canvasConfigs.dim;
 
     if (!value) {
       const canvas = event.target;
@@ -414,19 +452,28 @@ import * as utils from './utils';
       Y = value.y;
     }
 
-    mousePos.x = Math.round(X * canvasConfigs.width.ratio);
-    mousePos.y = Math.round(Y * canvasConfigs.height.ratio);
+    mousePos.x = Math.round(X * canvasDim.width.ratio);
+    mousePos.y = Math.round(Y * canvasDim.height.ratio);
 
     mousePosBox.fireEvent(customEvents.onMouseCoordinatesChange);
   }
 
   function setupCanvasSettings(canvas) {
     const canvasConfigs = configs.canvas;
-    const dbw = canvasConfigs.width.drawingBuffer;
-    const dbh = canvasConfigs.height.drawingBuffer;
+    const canvasDim = canvasConfigs.dim;
+    const { width, height } = canvasDim;
+    const minHeightClient = Math.min(height.client, height.default.client);
+    height.client = minHeightClient;
+
+    const dbw = width.drawingBuffer;
+    const dbh = height.drawingBuffer;
+    const cw = width.client;
+    const ch = height.client;
 
     canvas.setProp('width', dbw)
-      .setProp('height', dbh);
+      .setProp('height', dbh)
+      .setStyle('width', utils.toPx(cw))
+      .setStyle('height', utils.toPx(ch));
 
     DOMToolsBox.getChild('canvasWidthField').setAttr('value', dbw);
     DOMToolsBox.getChild('canvasHeightField').setAttr('value', dbh);
