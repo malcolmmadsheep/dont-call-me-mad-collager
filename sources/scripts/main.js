@@ -227,8 +227,7 @@ import * as utils from './utils';
         name: 'click',
         callback(event) {
           const newBackgroundColor = event.target.value;
-          console.log(newBackgroundColor);
-
+          
           setCanvasBackgroundColor(newBackgroundColor);
         }
       }]);
@@ -306,19 +305,15 @@ import * as utils from './utils';
         tempClientValue = heightDef.client * drawingBufferRatio;
         newClientWith = Math.min(width.default.client, tempClientValue);
       } else {
-        console.log('huy');
         tempClientValue = Math.min(height.default.client, width.default.client);
         newClientHeight = newClientWith = Math.min(value, tempClientValue)
       }
 
       width.client = newClientWith;
       height.client = newClientHeight;
-      console.log(width.client, height.client, width.drawingBuffer, height.drawingBuffer);
       width.ratio = width.drawingBuffer / width.client;
       height.ratio = height.drawingBuffer / height.client;
-      console.log(width.ratio, height.ratio);
 
-      console.log(canvasPropertyConfigs);
       const resolutionChangeCustomEvent = new CustomEvent('resolutionChange', {
         detail: {
           propName: propertyName,
