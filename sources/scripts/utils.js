@@ -16,7 +16,7 @@ export function toPx(value) {
 
 export function checkNum(numStr) {
   const checkedNum = numStr.trim().split('')
-    .filter(figure => '0123456789'.contains(figure))
+    .filter(figure => '0123456789'.includes(figure))
     .join('');
 
   return (checkedNum.length === numStr.length) ? parseInt(checkedNum) : null;

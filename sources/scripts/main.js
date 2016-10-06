@@ -1,26 +1,26 @@
 ﻿'use strict';
 
-export function toArray(list) {
-  const array = [];
+import 'styles/main.scss';
+import prerender from './DOMPrerendering';
+import DOMElement from './DOMElement';
+import * as utils from './utils';
 
-  for (let i = 0, listLength = list.length; i < listLength; i += 1) {
-    array.push(list[i]);
-  }
+(function(window) {
+  const getElementById = document.getElementById.bind(document);
+  const DEFAULT_CANVAS_DRAWING_BUFFER_WIDTH = 1680;
+  const DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT = 1050;
+  const CANVAS = new DOMElement(getElementById('field'));
+  const BODY = new DOMElement(document.body);
+  const DEFAULT_CANVAS_CLIENT_WIDTH = CANVAS.getProp('clientWidth');
+  const DEFAULT_CANVAS_CLIENT_HEIGHT = CANVAS.getProp('clientHeight');
 
-  return array;
-}
-
-export function toPx(value) {
-  return `${value}px`;
-}
-
-export function checkNum(numStr) {
-  const checkedNum = numStr.trim().split('')
-    .filter(figure => '0123456789'.contains(figure))
-    .join('');
-
-  return (checkedNum.length === numStr.length) ? parseInt(checkedNum) : null;
-}   canvas: {
+  const DOMToolsBox = new DOMElement(getElementById('tools-box'));
+  const DOMWorkspace = new DOMElement(getElementById('workspace'));
+  const DOMStatusBar = new DOMElement(getElementById('status-bar'));
+  const CTX = CANVAS.self.getContext('2d');
+  const objects = [];
+  const configs = {
+    canvas: {
       filling: {
         previousColor: '#fff',
         currentColor: '#fff'
@@ -389,12 +389,13 @@ export function checkNum(numStr) {
     const { propName, drawingBuffer, client } = customEvent.detail;
     const { canvas } = configs;
 
-    const imageData = CTX.getImageData(0, 0, canvas.width.drawingBuffer, canvas.height.drawingBuffer);
+    // const imageData = CTX.getImageData(0, 0, canvas.width.drawingBuffer, canvas.height.drawingBuffer);
     this.setProp(propName, drawingBuffer);
     this.setStyle(propName, utils.toPx(client));
     console.log(canvas);
     clearCanvas();
-    CTX.putImageData(imageData, 0, 0);
+    redraw();
+    // CTX.putImageData(imageData, 0, 0);
   }
 
   function updateMouseCoordinates(mousePos, event, value) {
