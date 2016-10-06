@@ -157,9 +157,11 @@ export default class DOMElement {
         }
 
         necessaryChild = this._findChild(childName, child._children);
-      }
 
-      return necessaryChild;
+        if (necessaryChild) {
+          return necessaryChild;
+        }
+      }
     }
   }
 }

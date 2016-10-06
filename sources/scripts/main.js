@@ -3,14 +3,23 @@
 import 'styles/main.scss';
 import prerender from './DOMPrerendering';
 import DOMElement from './DOMElement';
-import * as appUtils from './utils';
+import * as utils from './utils';
 
 (function(window) {
-  const CANVAS_DRAWING_BUFFER_WIDTH = 1680;
-  const CANVAS_DRAWING_BUFFER_HEIGHT = 1050;
   const getElementById = document.getElementById.bind(document);
+  const DEFAULT_CANVAS_DRAWING_BUFFER_WIDTH = 1680;
+  const DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT = 1050;
   const CANVAS = new DOMElement(getElementById('field'));
   const BODY = new DOMElement(document.body);
+  const DEFAULT_CANVAS_CLIENT_WIDTH = CANVAS.getProp('clientWidth');
+  const DEFAULT_CANVAS_CLIENT_HEIGHT = CANVAS.getProp('clientHeight');
+  let CANVAS_DRAWING_BUFFER_WIDTH = DEFAULT_CANVAS_DRAWING_BUFFER_WIDTH;
+  let CANVAS_DRAWING_BUFFER_HEIGHT = DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT;
+  let CANVAS_CLIENT_WIDTH = DEFAULT_CANVAS_CLIENT_WIDTH;
+  let CANVAS_CLIENT_HEIGHT = DEFAULT_CANVAS_CLIENT_HEIGHT;
+  let CANVAS_WIDTH_RATIO = CANVAS_DRAWING_BUFFER_WIDTH / CANVAS_CLIENT_WIDTH;
+  let CANVAS_HEIGHT_RATIO = CANVAS_DRAWING_BUFFER_HEIGHT / CANVAS_CLIENT_HEIGHT;
+
   const DOMToolsBox = new DOMElement(getElementById('tools-box'));
   const DOMWorkspace = new DOMElement(getElementById('workspace'));
   const DOMStatusBar = new DOMElement(getElementById('status-bar'));
@@ -153,6 +162,19 @@ import * as appUtils from './utils';
     const canvasWidthField = new DOMElement(getElementById('canvas-width'));
     const canvasHeightField = new DOMElement(getElementById('canvas-height'));
 
+    canvasWidthField.addListeners([{
+      name: 'blur',
+      callback(event) {
+        updateCanvasResolution(event, 'w', CANVAS_DRAWING_BUFFER_WIDTH);
+      }
+    }]);
+    canvasHeightField.addListeners([{
+      name: 'blur',
+      callback(event) {
+        updateCanvasResolution(event, 'h', CANVAS_DRAWING_BUFFER_HEIGHT);
+      }
+    }]);
+
     brushSettingsBox.addChild('previewBrushScaleRange', previewBrushScaleRange);
     canvasSettingsBox.addChildren({
       canvasWidthField,
@@ -169,6 +191,39 @@ import * as appUtils from './utils';
     });
 
     return toolsBox;
+  }
+
+  function updateCanvasResolution(event, type, previousValue) {
+    const target = event.target;
+    const value = checkNum(target.value);
+
+    if (value && value > 0) {
+      if (type === 'w') {
+        CANVAS_DRAWING_BUFFER_WIDTH = value;
+        CANVAS.setProp('width', value);
+        const newCanvasClientWidth = (value > DEFAULT_CANVAS_CLIENT_WIDTH) ? DEFAULT_CANVAS_CLIENT_WIDTH : value;
+        CANVAS_CLIENT_WIDTH = newCanvasClientWidth;
+        CANVAS_WIDTH_RATIO = value / CANVAS_CLIENT_WIDTH;
+        CANVAS.setStyle('width', utils.toPx(newCanvasClientWidth));
+      } else if (type === 'h') {
+        CANVAS_DRAWING_BUFFER_HEIGHT = value;
+        CANVAS.setProp('height', value);
+        const newCanvasClientHeight = (value > DEFAULT_CANVAS_CLIENT_HEIGHT) ? DEFAULT_CANVAS_CLIENT_HEIGHT : value;
+        CANVAS_CLIENT_HEIGHT = newCanvasClientHeight;
+        CANVAS_HEIGHT_RATIO = value / CANVAS_CLIENT_HEIGHT;
+        CANVAS.setStyle('height', utils.toPx(newCanvasClientHeight));
+      }
+    } else {
+      target.value = previousValue;
+    }
+  }
+
+  function checkNum(numStr) {
+    const checkedNum = numStr.trim().split('')
+      .filter(figure => ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(figure))
+      .join('');
+
+    return (checkedNum.length === numStr.length) ? parseInt(checkedNum) : null;
   }
 
   function setWorkspaceItems(workspace) {
@@ -257,8 +312,8 @@ import * as appUtils from './utils';
       Y = value.y;
     }
 
-    mousePos.x = X;
-    mousePos.y = Y;
+    mousePos.x = Math.round(X * CANVAS_WIDTH_RATIO);
+    mousePos.y = Math.round(Y * CANVAS_HEIGHT_RATIO);
 
     mousePosBox.fireEvent(customEvents.onMouseCoordinatesChange);
   }
