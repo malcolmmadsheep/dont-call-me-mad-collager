@@ -1,26 +1,30 @@
 ﻿'use strict';
 
-import 'styles/main.scss';
-import prerender from './DOMPrerendering';
-import DOMElement from './DOMElement';
-import * as utils from './utils';
+export function toArray(list) {
+  const array = [];
 
-(function(window) {
-  const getElementById = document.getElementById.bind(document);
-  const DEFAULT_CANVAS_DRAWING_BUFFER_WIDTH = 1680;
-  const DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT = 1050;
-  const CANVAS = new DOMElement(getElementById('field'));
-  const BODY = new DOMElement(document.body);
-  const DEFAULT_CANVAS_CLIENT_WIDTH = CANVAS.getProp('clientWidth');
-  const DEFAULT_CANVAS_CLIENT_HEIGHT = CANVAS.getProp('clientHeight');
+  for (let i = 0, listLength = list.length; i < listLength; i += 1) {
+    array.push(list[i]);
+  }
 
-  const DOMToolsBox = new DOMElement(getElementById('tools-box'));
-  const DOMWorkspace = new DOMElement(getElementById('workspace'));
-  const DOMStatusBar = new DOMElement(getElementById('status-bar'));
-  const CTX = CANVAS.self.getContext('2d');
-  const objects = [];
-  const configs = {
-    canvas: {
+  return array;
+}
+
+export function toPx(value) {
+  return `${value}px`;
+}
+
+export function checkNum(numStr) {
+  const checkedNum = numStr.trim().split('')
+    .filter(figure => '0123456789'.contains(figure))
+    .join('');
+
+  return (checkedNum.length === numStr.length) ? parseInt(checkedNum) : null;
+}   canvas: {
+      filling: {
+        previousColor: '#fff',
+        currentColor: '#fff'
+      },
       width: {
         default: {
           client: DEFAULT_CANVAS_CLIENT_WIDTH,
@@ -38,9 +42,13 @@ import * as utils from './utils';
         client: DEFAULT_CANVAS_CLIENT_HEIGHT,
         drawingBuffer: DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT,
         ratio: DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT / DEFAULT_CANVAS_CLIENT_HEIGHT
-      }
+      },
+      backgroundColor: '#fff'
     },
-    preview: {},
+    brush: {
+      width: 0,
+      height: 0
+    },
     mouse: {
       isDown: false,
       pos: {
@@ -67,7 +75,8 @@ import * as utils from './utils';
       DOMStatusBar
     });
 
-    CANVAS.register('clear', clearCanvas);
+    // CANVAS.register('clear', clearCanvas);
+    clearCanvas();
     CTX.fillStyle = "rgb(200,0,0)"; // sets the color to fill in the rectangle with
     CTX.fillRect(10, 10, 55, 50);
     // CANVAS.run('clear', {ctx: CTX});
@@ -168,6 +177,10 @@ import * as utils from './utils';
     // }, false);
   }
 
+  function redraw() {
+
+  }
+
   function setToolsBoxItems(toolsBox) {
     const canvasSettingsBox = new DOMElement(getElementById('canvas-settings-box'));
     const brushPreviewChildren = prerender();
@@ -175,6 +188,9 @@ import * as utils from './utils';
     const previewBrushScaleRange = new DOMElement(getElementById('preview-brush-scale'));
     const canvasWidthField = new DOMElement(getElementById('canvas-width'));
     const canvasHeightField = new DOMElement(getElementById('canvas-height'));
+    const canvasTBgRadio = new DOMElement(getElementById('transparent-background-color-radio'));
+    const canvasColorBgRadio = new DOMElement(getElementById('color-background-color-radio'));
+    const canvasBgColorInput = new DOMElement(getElementById('background-color-input'));
     const canvasConfigs = configs.canvas;
     const dbw = canvasConfigs.width.drawingBuffer;
     const dbh = canvasConfigs.height.drawingBuffer;
@@ -201,11 +217,36 @@ import * as utils from './utils';
         updateCanvasResolutionWithKeypress(event, 'height', dbh);
       }
     }]);
+    [canvasColorBgRadio, canvasTBgRadio].forEach(radio => {
+      radio.addListeners([{
+        name: 'click',
+        callback(event) {
+          const newBackgroundColor = event.target.value;
+          console.log(newBackgroundColor);
+
+          setCanvasBackgroundColor(newBackgroundColor);
+        }
+      }]);
+    });
+    canvasBgColorInput.addListeners([{
+      name: 'change',
+      callback(event) {
+        const newBackgroundColor = event.target.value;
+
+        canvasColorBgRadio.setProp('value', newBackgroundColor);
+        if (canvasColorBgRadio.getProp('checked')) {
+          setCanvasBackgroundColor(newBackgroundColor);
+        }
+      }
+    }]);
 
     brushSettingsBox.addChild('previewBrushScaleRange', previewBrushScaleRange);
     canvasSettingsBox.addChildren({
       canvasWidthField,
-      canvasHeightField
+      canvasHeightField,
+      canvasColorBgRadio,
+      canvasTBgRadio,
+      canvasBgColorInput
     });
 
     const brushPreview = brushSettingsBox.getChild('brushPreview');
@@ -230,7 +271,7 @@ import * as utils from './utils';
 
   function updateCanvasResolution(event, propertyName, previousValue) {
     const target = event.target;
-    const value = checkNum(target.value);
+    const value = utils.checkNum(target.value);
 
     if (value && value > 0) {
       const canvasPropertyConfigs = configs.canvas[propertyName];
@@ -254,14 +295,6 @@ import * as utils from './utils';
     } else {
       target.value = previousValue;
     }
-  }
-
-  function checkNum(numStr) {
-    const checkedNum = numStr.trim().split('')
-      .filter(figure => ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(figure))
-      .join('');
-
-    return (checkedNum.length === numStr.length) ? parseInt(checkedNum) : null;
   }
 
   function setWorkspaceItems(workspace) {
@@ -299,24 +332,40 @@ import * as utils from './utils';
     return statusBar;
   }
 
-  function clearCanvas(options) {
-    const ctx = options.ctx;
+  function clearCanvas() {
+    const canvasConfigs = configs.canvas;
+    const { backgroundColor, width, height, filling } = canvasConfigs;
 
-    ctx.clearRect(0, 0, this.getProp('width'), this.getProp('height'));
+    if (backgroundColor === 'transparent') {
+      CANVAS.setStyle('background', 'url("public/images/transparent-bg.gif") repeat');
+      CTX.clearRect(0, 0, width.drawingBuffer, height.drawingBuffer);
+    } else {
+      CANVAS.setStyle('background', '');
+      CTX.fillStyle = backgroundColor;
+      CTX.fillRect(0, 0, canvasConfigs.width.drawingBuffer, canvasConfigs.height.drawingBuffer);
+      CTX.fillStyle = filling.previousColor;
+    }
+  }
+
+  function setCanvasBackgroundColor(color) {
+    configs.canvas.backgroundColor = color;
+
+    clearCanvas();
+    redraw();
   }
 
   function setBrushesEventHandlers(brushes, brushPreview) {
     brushes.forEach(brush => {
       brush.addListeners([{
         name: 'click',
-        callback: setBrushListener(brushes, brushPreview)
+        callback: createBrushHandler(brushes, brushPreview)
       }]);
     });
 
     return brushes;
   }
 
-  function setBrushListener(brushes, brushPreview) {
+  function createBrushHandler(brushes, brushPreview) {
     return (event) => {
       const currentBrush = event.target;
       const currentBrushSource = currentBrush.src;
@@ -338,9 +387,14 @@ import * as utils from './utils';
 
   function onCanvasResolutionChange(customEvent) {
     const { propName, drawingBuffer, client } = customEvent.detail;
+    const { canvas } = configs;
 
+    const imageData = CTX.getImageData(0, 0, canvas.width.drawingBuffer, canvas.height.drawingBuffer);
     this.setProp(propName, drawingBuffer);
     this.setStyle(propName, utils.toPx(client));
+    console.log(canvas);
+    clearCanvas();
+    CTX.putImageData(imageData, 0, 0);
   }
 
   function updateMouseCoordinates(mousePos, event, value) {
