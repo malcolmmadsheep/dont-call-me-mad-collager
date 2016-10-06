@@ -13,12 +13,6 @@ import * as utils from './utils';
   const BODY = new DOMElement(document.body);
   const DEFAULT_CANVAS_CLIENT_WIDTH = CANVAS.getProp('clientWidth');
   const DEFAULT_CANVAS_CLIENT_HEIGHT = CANVAS.getProp('clientHeight');
-  let CANVAS_DRAWING_BUFFER_WIDTH = DEFAULT_CANVAS_DRAWING_BUFFER_WIDTH;
-  let CANVAS_DRAWING_BUFFER_HEIGHT = DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT;
-  let CANVAS_CLIENT_WIDTH = DEFAULT_CANVAS_CLIENT_WIDTH;
-  let CANVAS_CLIENT_HEIGHT = DEFAULT_CANVAS_CLIENT_HEIGHT;
-  let CANVAS_WIDTH_RATIO = CANVAS_DRAWING_BUFFER_WIDTH / CANVAS_CLIENT_WIDTH;
-  let CANVAS_HEIGHT_RATIO = CANVAS_DRAWING_BUFFER_HEIGHT / CANVAS_CLIENT_HEIGHT;
 
   const DOMToolsBox = new DOMElement(getElementById('tools-box'));
   const DOMWorkspace = new DOMElement(getElementById('workspace'));
@@ -26,6 +20,26 @@ import * as utils from './utils';
   const CTX = CANVAS.self.getContext('2d');
   const objects = [];
   const configs = {
+    canvas: {
+      width: {
+        default: {
+          client: DEFAULT_CANVAS_CLIENT_WIDTH,
+          drawingBuffer: DEFAULT_CANVAS_DRAWING_BUFFER_WIDTH
+        },
+        client: DEFAULT_CANVAS_CLIENT_WIDTH,
+        drawingBuffer: DEFAULT_CANVAS_DRAWING_BUFFER_WIDTH,
+        ratio: DEFAULT_CANVAS_DRAWING_BUFFER_WIDTH / DEFAULT_CANVAS_CLIENT_WIDTH
+      },
+      height: {
+        default: {
+          client: DEFAULT_CANVAS_CLIENT_HEIGHT,
+          drawingBuffer: DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT
+        },
+        client: DEFAULT_CANVAS_CLIENT_HEIGHT,
+        drawingBuffer: DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT,
+        ratio: DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT / DEFAULT_CANVAS_CLIENT_HEIGHT
+      }
+    },
     preview: {},
     mouse: {
       isDown: false,
@@ -161,17 +175,30 @@ import * as utils from './utils';
     const previewBrushScaleRange = new DOMElement(getElementById('preview-brush-scale'));
     const canvasWidthField = new DOMElement(getElementById('canvas-width'));
     const canvasHeightField = new DOMElement(getElementById('canvas-height'));
+    const canvasConfigs = configs.canvas;
+    const dbw = canvasConfigs.width.drawingBuffer;
+    const dbh = canvasConfigs.height.drawingBuffer;
 
     canvasWidthField.addListeners([{
       name: 'blur',
       callback(event) {
-        updateCanvasResolution(event, 'w', CANVAS_DRAWING_BUFFER_WIDTH);
+        updateCanvasResolution(event, 'width', dbw);
+      }
+    }, {
+      name: 'keypress',
+      callback(event) {
+        updateCanvasResolutionWithKeypress(event, 'width', dbw);
       }
     }]);
     canvasHeightField.addListeners([{
       name: 'blur',
       callback(event) {
-        updateCanvasResolution(event, 'h', CANVAS_DRAWING_BUFFER_HEIGHT);
+        updateCanvasResolution(event, 'height', dbh);
+      }
+    }, {
+      name: 'keypress',
+      callback(event) {
+        updateCanvasResolutionWithKeypress(event, 'height', dbh);
       }
     }]);
 
@@ -193,26 +220,37 @@ import * as utils from './utils';
     return toolsBox;
   }
 
-  function updateCanvasResolution(event, type, previousValue) {
+  function updateCanvasResolutionWithKeypress(event, propertyName, previousValue) {
+    const { keyCode } = event;
+
+    if (keyCode === 13) {
+      updateCanvasResolution(event, propertyName, previousValue);
+    }
+  }
+
+  function updateCanvasResolution(event, propertyName, previousValue) {
     const target = event.target;
     const value = checkNum(target.value);
 
     if (value && value > 0) {
-      if (type === 'w') {
-        CANVAS_DRAWING_BUFFER_WIDTH = value;
-        CANVAS.setProp('width', value);
-        const newCanvasClientWidth = (value > DEFAULT_CANVAS_CLIENT_WIDTH) ? DEFAULT_CANVAS_CLIENT_WIDTH : value;
-        CANVAS_CLIENT_WIDTH = newCanvasClientWidth;
-        CANVAS_WIDTH_RATIO = value / CANVAS_CLIENT_WIDTH;
-        CANVAS.setStyle('width', utils.toPx(newCanvasClientWidth));
-      } else if (type === 'h') {
-        CANVAS_DRAWING_BUFFER_HEIGHT = value;
-        CANVAS.setProp('height', value);
-        const newCanvasClientHeight = (value > DEFAULT_CANVAS_CLIENT_HEIGHT) ? DEFAULT_CANVAS_CLIENT_HEIGHT : value;
-        CANVAS_CLIENT_HEIGHT = newCanvasClientHeight;
-        CANVAS_HEIGHT_RATIO = value / CANVAS_CLIENT_HEIGHT;
-        CANVAS.setStyle('height', utils.toPx(newCanvasClientHeight));
+      const canvasPropertyConfigs = configs.canvas[propertyName];
+      if (canvasPropertyConfigs.drawingBuffer === value) {
+        return;
       }
+      const defaultConfigs = canvasPropertyConfigs.default;
+      const newCanvasClientTypeValue = (value > defaultConfigs.client) ? defaultConfigs.client : value;
+      canvasPropertyConfigs.drawingBuffer = value;
+      canvasPropertyConfigs.client = newCanvasClientTypeValue;
+      canvasPropertyConfigs.ratio = value / newCanvasClientTypeValue;
+
+      const resolutionChangeCustomEvent = new CustomEvent('resolutionChange', {
+        detail: {
+          propName: propertyName,
+          drawingBuffer: canvasPropertyConfigs.drawingBuffer,
+          client: canvasPropertyConfigs.client
+        }
+      });
+      CANVAS.fireEvent(resolutionChangeCustomEvent);
     } else {
       target.value = previousValue;
     }
@@ -246,6 +284,7 @@ import * as utils from './utils';
     }]);
 
     CANVAS.addListeners([
+      { name: 'resolutionChange', callback: onCanvasResolutionChange }, // custom
       { name: 'mousemove', callback: onCanvasMouseCoordinatesUpdateHandler },
       { name: 'mouseleave', callback: onCanvasMouseLeaveHandler }
     ]);
@@ -297,8 +336,16 @@ import * as utils from './utils';
     updateMouseCoordinates(configs.mouse.pos, event, { x: 0, y: 0 });
   }
 
+  function onCanvasResolutionChange(customEvent) {
+    const { propName, drawingBuffer, client } = customEvent.detail;
+
+    this.setProp(propName, drawingBuffer);
+    this.setStyle(propName, utils.toPx(client));
+  }
+
   function updateMouseCoordinates(mousePos, event, value) {
     let X, Y;
+    const canvasConfigs = configs.canvas;
 
     if (!value) {
       const canvas = event.target;
@@ -312,18 +359,22 @@ import * as utils from './utils';
       Y = value.y;
     }
 
-    mousePos.x = Math.round(X * CANVAS_WIDTH_RATIO);
-    mousePos.y = Math.round(Y * CANVAS_HEIGHT_RATIO);
+    mousePos.x = Math.round(X * canvasConfigs.width.ratio);
+    mousePos.y = Math.round(Y * canvasConfigs.height.ratio);
 
     mousePosBox.fireEvent(customEvents.onMouseCoordinatesChange);
   }
 
   function setupCanvasSettings(canvas) {
-    canvas.setProp('width', CANVAS_DRAWING_BUFFER_WIDTH)
-      .setProp('height', CANVAS_DRAWING_BUFFER_HEIGHT);
+    const canvasConfigs = configs.canvas;
+    const dbw = canvasConfigs.width.drawingBuffer;
+    const dbh = canvasConfigs.height.drawingBuffer;
 
-    DOMToolsBox.getChild('canvasWidthField').setAttr('value', CANVAS_DRAWING_BUFFER_WIDTH);
-    DOMToolsBox.getChild('canvasHeightField').setAttr('value', CANVAS_DRAWING_BUFFER_HEIGHT);
+    canvas.setProp('width', dbw)
+      .setProp('height', dbh);
+
+    DOMToolsBox.getChild('canvasWidthField').setAttr('value', dbw);
+    DOMToolsBox.getChild('canvasHeightField').setAttr('value', dbh);
   }
   // function createObject(pos, imgSrc, size) {
   //   var length = objects.length;
