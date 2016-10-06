@@ -1,4 +1,6 @@
-﻿$status-bar-height: 3%;
+﻿$brush-items-count: 4;
+$brush-item-width: 100% / $brush-items-count;
+$status-bar-height: 3%;
 $main-blocks-heigth: 100% - $status-bar-height;
 $tools-box-width: 15%;
 $workspace-width: 100% - $tools-box-width;
@@ -68,14 +70,22 @@ body {
           display: flex;
           flex-wrap: wrap;
           flex-direction: row;
+          align-items: flex-start;
+          align-content: flex-start;
           width: 80%;
           height: 100%;
           overflow-y: auto;
           margin: 10px 10% 0 10%;
+          background-color: #4191de;
+          border: 1px solid #153f68;
           .brush-item {
-            width: 50%;
+            display: flex;
+            align-content: center;
+            align-items: center;
+            width: $brush-item-width;
+
             &.selected {
-              border: 1px solid #125fa9;
+              outline: 1px solid #125fa9;
             }
           }
         }

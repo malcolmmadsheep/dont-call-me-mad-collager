@@ -59,10 +59,17 @@ function createPreviewBrush(sources) {
 }
 
 function renderBrushplate(sources, selectedItemSource) {
-  const brushes = sources.map(source => new DOMElement(createElement('img', {
-    src: source,
-    className: `brush-item`
-  })));
+  const brushes = sources.map(source => {
+    const img = new DOMElement(createElement('img', {
+      src: source
+    }));
+    const div = new DOMElement(createElement('div', {
+      className: `brush-item`
+    }));
+
+    return div.addChild('brush-example', img, true);
+  });
+  console.log(brushes);
   brushes[0].addClass('selected');
   const brushesContainer = new DOMElement(document.getElementById('brushes'));
 

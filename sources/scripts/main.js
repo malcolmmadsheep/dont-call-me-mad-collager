@@ -353,15 +353,16 @@ import * as utils from './utils';
     redraw();
   }
 
-  function setBrushesEventHandlers(brushes, brushPreview) {
-    brushes.forEach(brush => {
-      brush.addListeners([{
-        name: 'click',
-        callback: createBrushHandler(brushes, brushPreview)
-      }]);
-    });
+  function setBrushesEventHandlers(brushesItems, brushPreview) {
+    brushesItems.map(brushesItem => brushesItem.getChild('brush-example'))
+      .forEach((brush, i, brushes) => {
+        brush.addListeners([{
+          name: 'click',
+          callback: createBrushHandler(brushesItems, brushPreview)
+        }]);
+      });
 
-    return brushes;
+    return brushesItems;
   }
 
   function createBrushHandler(brushes, brushPreview) {
@@ -370,7 +371,7 @@ import * as utils from './utils';
       const currentBrushSource = currentBrush.src;
 
       brushes.forEach(brush => brush.removeClass('selected'));
-      currentBrush.classList.add('selected');
+      currentBrush.parentNode.classList.add('selected');
 
       brushPreview.setAttr('src', currentBrushSource);
     }

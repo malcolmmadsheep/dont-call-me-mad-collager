@@ -2,10 +2,10 @@
 
 **Author**: Vladislav Zhuk;
 <br />
-**Telegram**: @vladislavzhuk / +38(066)041-94-95;
+**Telegram**: [@vladislavzhuk](https://telegram.me/vladislavzhuk);
 <br />
-**Email**: malcolm.madsheep@gmail.com;
+**Email**: [malcolm.madsheep@gmail.com](mailto:malcolm.madsheep@gmail.com);
 <br />
-**Skype**: malcolm.madsheep;
+**Skype**: [malcolm.madsheep](skype:malcolm.madsheep);
 <br />
 **Website**: [malcolmmadsheep.com](http://malcolmmadsheep.com/);

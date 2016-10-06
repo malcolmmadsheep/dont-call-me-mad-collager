@@ -2,6 +2,7 @@
 const path = require('path');
 const webpack = require('webpack');
 const LiveReloadPlugin = require('webpack-livereload-plugin');
+
 const config = {
   entry: './sources/scripts/main.js',
   output: {
@@ -29,4 +30,5 @@ const config = {
     new LiveReloadPlugin()
   ]
 };
+
 module.exports = config;
