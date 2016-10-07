@@ -223,15 +223,21 @@ import * as utils from './utils';
     const brushDimConfigs = brushConfigs.dim;
     brushDimConfigs.width.default.client = brushPreview.getProp('clientWidth');
     brushDimConfigs.height.default.client = brushPreview.getProp('clientHeight');
-    brushPreview.setStyle('width', utils.toPx(calculatePreviewClientSize('width')));
-    brushPreview.setStyle('height', utils.toPx(calculatePreviewClientSize('height')));
+    brushDimConfigs.width.default.image = brushPreview.getProp('width');
+    brushDimConfigs.height.default.image = brushPreview.getProp('height');
+    brushDimConfigs.width.image = calculatePreviewClientSize('width');
+    brushDimConfigs.height.image = calculatePreviewClientSize('height');
+    brushPreview.setStyle('width', utils.toPx(brushDimConfigs.width.image));
+    brushPreview.setStyle('height', utils.toPx(brushDimConfigs.height.image));
 
     brushPreview.addListeners([{
       name: 'sizeChange',
       callback(customEvent) {
         const type = customEvent.detail;
+        const newValue = calculatePreviewClientSize(type);
+        configs.brush.dim[type].image = newValue;
 
-        this.setStyle(type, utils.toPx(calculatePreviewClientSize(type)));
+        this.setStyle(type, utils.toPx(newValue));
       }
     }]);
     canvasWidthField.addListeners([{
@@ -313,9 +319,9 @@ import * as utils from './utils';
     const defaultClientValue = previewBrushConfigsDimType.default.client;
     const scale = previewBrushConfigsDimType.scale;
 
-    console.log(type);
-    console.log(defaultClientValue, scale, scalingCoef);
-    console.log(Math.round((defaultClientValue * scale / scalingCoef)));
+    // console.log(type);
+    // console.log(defaultClientValue, scale, scalingCoef);
+    // console.log(Math.round((defaultClientValue * scale / scalingCoef)));
 
     return Math.round((defaultClientValue * scale / scalingCoef));
   }
@@ -396,6 +402,7 @@ import * as utils from './utils';
   }
 
   function setWorkspaceItems(workspace) {
+    const brushPreview = DOMToolsBox.getChild('brushPreview');
     workspace.addChild('canvas', CANVAS);
     mousePosBox = new DOMElement(getElementById('mouse-position-box'));
 
@@ -417,7 +424,15 @@ import * as utils from './utils';
     CANVAS.addListeners([
       { name: 'resolutionChange', callback: onCanvasResolutionChange }, // custom
       { name: 'mousemove', callback: onCanvasMouseCoordinatesUpdateHandler },
-      { name: 'mouseleave', callback: onCanvasMouseLeaveHandler }
+      {
+        name: 'mousemove',
+        callback(event) {
+          
+        }
+      }, { name: 'mouseleave', callback: onCanvasMouseLeaveHandler },
+      { name: 'click', callback: onCanvasMouseClickHandler },
+      { name: 'mousedown', callback(event) { configs.mouse.isDown = true; } },
+      { name: 'mouseup', callback(event) { configs.mouse.isDown = false; } }
     ]);
     setupCanvasSettings(CANVAS);
 
@@ -472,13 +487,29 @@ import * as utils from './utils';
       currentBrushBox.addClass('selected');
 
       brushPreview.setAttr('src', currentBrushSource);
-      const newDefaultWidth = currentBrush.naturalWidth;
-      const newDefaultHeight = currentBrush.naturalHeight;
+      const newDefaultWidth = currentBrush.getProp('naturalWidth');
+      const newDefaultHeight = currentBrush.getProp('naturalHeight');
 
       const brushDimConfigs = configs.brush.dim;
       brushDimConfigs.width.default.image = newDefaultWidth;
       brushDimConfigs.height.default.image = newDefaultHeight;
     }
+  }
+
+  function onCanvasMouseClickHandler(event) {
+    const { x, y } = configs.mouse.pos;
+    const brushDimConfigs = configs.brush.dim;
+    const { width, height } = brushDimConfigs;
+    const sourceImgWidth = width.default.image;
+    const sourceImgHeight = height.default.image;
+    const imgWidth = width.image;
+    const imgHeight = height.image;
+    const xPos = x - imgWidth / 2;
+    const yPos = y - imgHeight / 2;
+
+    // console.log(sourceImgWidth, sourceImgHeight, imgWidth, imgHeight, xPos, yPos);
+
+    CTX.drawImage(brushPreview.self, 0, 0, sourceImgWidth, sourceImgHeight, xPos, yPos, imgWidth, imgHeight);
   }
 
   function onCanvasMouseCoordinatesUpdateHandler(event) {
