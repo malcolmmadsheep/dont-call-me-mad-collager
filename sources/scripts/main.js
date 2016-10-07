@@ -51,13 +51,16 @@ import * as utils from './utils';
       backgroundColor: '#fff'
     },
     brush: {
-      width: {
-        default: {},
-        scale: 1
-      },
-      height: {
-        default: {},
-        scale: 1
+      src: '',
+      dim: {
+        width: {
+          default: {},
+          scale: 1
+        },
+        height: {
+          default: {},
+          scale: 1
+        }
       }
     },
     mouse: {
@@ -73,7 +76,7 @@ import * as utils from './utils';
       detail: configs.mouse.pos
     })
   };
-  let mousePosBox;
+  let mousePosBox, scalingCoef;
 
   window.onload = function() {
     setToolsBoxItems(DOMToolsBox);
@@ -92,8 +95,6 @@ import * as utils from './utils';
     CTX.fillRect(10, 10, 55, 50);
     // CANVAS.run('clear', {ctx: CTX});
 
-    // var imgSrc = '';
-    // var isDefault = true;
     // var randBtn = document.getElementById('rand');
     // var mouseIsDown = false;
     // var dontStop = false;
@@ -196,7 +197,7 @@ import * as utils from './utils';
     const canvasSettingsBox = new DOMElement(getElementById('canvas-settings-box'));
     const brushPreviewChildren = prerender();
     const { previewBox, brushesBox } = brushPreviewChildren; //brushSettingsBox.getChild('brushPreview');
-    console.log(brushPreviewChildren);
+    // console.log(brushPreviewChildren);
     // const brushes = brushSettingsBox.getChild('brushesBox').childrenToArray();
     const brushes = brushesBox.childrenToArray();
     const brushPreview = previewBox.getChild('brushPreview');
@@ -212,13 +213,24 @@ import * as utils from './utils';
     const dbw = canvasDimConfigs.width.drawingBuffer;
     const dbh = canvasDimConfigs.height.drawingBuffer;
 
+    scalingCoef = Math.round(toPreviewBrushScale(previewBrushWidthScale.getAttr('max')));
+
     const brushConfigs = configs.brush;
-    const bwdc = brushConfigs.width.default.client = brushPreview.getProp('clientWidth');
-    const bhdc = brushConfigs.height.default.client = brushPreview.getProp('clientHeight');
-    brushPreview.setStyle('width', utils.toPx(bwdc * configs.brush.width.scale / 2));
-    brushPreview.setStyle('height', utils.toPx(bhdc * configs.brush.height.scale / 2));
+    brushConfigs.src = brushPreview.getProp('src');
+    const brushDimConfigs = brushConfigs.dim;
+    brushDimConfigs.width.default.client = brushPreview.getProp('clientWidth');
+    brushDimConfigs.height.default.client = brushPreview.getProp('clientHeight');
+    brushPreview.setStyle('width', utils.toPx(calculatePreviewClientSize('width')));
+    brushPreview.setStyle('height', utils.toPx(calculatePreviewClientSize('height')));
 
+    brushPreview.addListeners([{
+      name: 'sizeChange',
+      callback(customEvent) {
+        const type = customEvent.detail;
 
+        this.setStyle(type, utils.toPx(calculatePreviewClientSize(type)));
+      }
+    }]);
     canvasWidthField.addListeners([{
       name: 'blur',
       callback(event) {
@@ -265,25 +277,13 @@ import * as utils from './utils';
     previewBrushWidthScale.addListeners([{
       name: 'change,mousemove',
       callback(event) {
-        const target = this;
-        const newScale = toPreviewBrushScale(this.getProp('value'));
-        const brushWidthConfigs = configs.brush.width;
-        const dbwc = brushWidthConfigs.default.client;
-
-        brushWidthConfigs.scale = newScale;
-        brushPreview.setStyle('width', utils.toPx(dbwc * newScale / 2));
+        changePreviewBrushSize(this, 'width');
       }
     }]);
     previewBrushHeightScale.addListeners([{
       name: 'change,mousemove',
       callback(event) {
-        const target = this;
-        const newScale = toPreviewBrushScale(this.getProp('value'));
-        const brushWidthConfigs = configs.brush.height;
-        const dbwc = brushWidthConfigs.default.client;
-
-        brushWidthConfigs.scale = newScale;
-        brushPreview.setStyle('height', utils.toPx(dbwc * newScale / 2));
+        changePreviewBrushSize(this, 'height');
       }
     }]);
 
@@ -306,6 +306,14 @@ import * as utils from './utils';
     return toolsBox;
   }
 
+  function calculatePreviewClientSize(type) {
+    const previewBrushConfigsDimType = configs.brush.dim[type];
+    const defaultClientValue = previewBrushConfigsDimType.default.client;
+    const scale = previewBrushConfigsDimType.scale;
+
+    return Math.round((defaultClientValue * scale / scalingCoef));
+  }
+
   function updateCanvasResolutionWithKeypress(event, propertyName, previousValue) {
     const { keyCode } = event;
 
@@ -325,18 +333,18 @@ import * as utils from './utils';
         return;
       }
       const defaultConfigs = canvasPropertyConfigs.default;
-      const newCanvasClientTypeValue = (value > defaultConfigs.client) ? defaultConfigs.client : value;
+      const newCanvasClientTypeValue = Math.min(defaultConfigs.client, value);
       canvasPropertyConfigs.drawingBuffer = value;
       canvasPropertyConfigs.client = newCanvasClientTypeValue;
-      // canvasPropertyConfigs.ratio = value / newCanvasClientTypeValue;
 
       const { width, height } = canvasDimConfigs;
       const drawingBufferRatio = width.drawingBuffer / height.drawingBuffer;
-      let newClientHeight, newClientWith, tempClientValue;
+      let newClientHeight, newClientWidth, tempClientValue;
+
       if (drawingBufferRatio > 1) {
         const widthDef = width.default
         tempClientValue = widthDef.client * drawingBufferRatio;
-        newClientWith = Math.min(widthDef.client, tempClientValue);
+        newClientWidth = Math.min(widthDef.client, tempClientValue);
         tempClientValue = widthDef.client / drawingBufferRatio;
         newClientHeight = Math.min(height.default.client, tempClientValue);
       } else if (drawingBufferRatio < 1) {
@@ -344,10 +352,10 @@ import * as utils from './utils';
         tempClientValue = heightDef.client / drawingBufferRatio;
         newClientHeight = Math.min(heightDef.client, tempClientValue);
         tempClientValue = heightDef.client * drawingBufferRatio;
-        newClientWith = Math.min(width.default.client, tempClientValue);
+        newClientWidth = Math.min(width.default.client, tempClientValue);
       } else {
         tempClientValue = Math.min(height.default.client, width.default.client);
-        newClientHeight = newClientWith = Math.min(value, tempClientValue)
+        newClientHeight = newClientWidth = Math.min(value, tempClientValue)
       }
 
       width.client = newClientWith;
@@ -366,6 +374,18 @@ import * as utils from './utils';
     } else {
       target.value = previousValue;
     }
+  }
+
+  function changePreviewBrushSize(target, type) {
+    const newScale = toPreviewBrushScale(target.getProp('value'));
+    const brushTypeConfig = configs.brush.dim[type];
+    const dbtc = brushTypeConfig.default.client;
+
+    brushTypeConfig.scale = newScale;
+    const onSizeChangeEvent = new CustomEvent('sizeChange', {
+      detail: type
+    });
+    DOMToolsBox.getChild('brushPreview').fireEvent(onSizeChangeEvent);
   }
 
   function setWorkspaceItems(workspace) {
@@ -524,21 +544,4 @@ import * as utils from './utils';
     DOMToolsBox.getChild('canvasWidthField').setAttr('value', dbw);
     DOMToolsBox.getChild('canvasHeightField').setAttr('value', dbh);
   }
-  // function createObject(pos, imgSrc, size) {
-  //   var length = objects.length;
-  //   objects[length] = {};
-  //   objects[length].image = new Image();
-  //   objects[length].options = {};
-  //   objects[length].options.height = Math.round(window.innerHeight * size);
-  //   objects[length].options.width = Math.round(objects[length].options.height * 0.7);
-  //   objects[length].image.src = imgSrc;
-
-  //   objects[length].image.onload = function() {
-  //     ctx.drawImage(objects[length].image,
-  //       pos.x - objects[length].options.width / 2,
-  //       pos.y - objects[length].options.height / 2,
-  //       objects[length].options.width,
-  //       objects[length].options.height);
-  //   }
-  // }
 })(window);
