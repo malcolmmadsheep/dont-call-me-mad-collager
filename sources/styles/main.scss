@@ -58,7 +58,8 @@ body {
           justify-content: center;
           align-items: center;
           #preview-brush {
-            height: 100%;
+            max-height: 100%;
+            max-width: 100%;
           }
         }
         input[type="range"] {
@@ -89,7 +90,6 @@ body {
             align-items: center;
             width: $brush-item-width;
             &.selected {
-              // outline: 1px solid #125fa9;
               border-bottom: 2px solid #125fa9;
             }
           }

@@ -12,7 +12,8 @@ import * as utils from './utils';
   const DEFAULT_CANVAS_WIDTH_HEIGHT_RATIO = DEFAULT_CANVAS_DRAWING_BUFFER_WIDTH / DEFAULT_CANVAS_DRAWING_BUFFER_HEIGHT;
   const CANVAS = new DOMElement(getElementById('field'));
   const BODY = new DOMElement(document.body);
-  CANVAS.setStyle('background', 'url("public/images/transparent-bg.gif") repeat');
+  const TRANSPARENT_BACKGROUND_VALUE = 'url("public/images/transparent-bg.gif") repeat';
+  CANVAS.setStyle('background', TRANSPARENT_BACKGROUND_VALUE);
   const DEFAULT_CANVAS_CLIENT_WIDTH = CANVAS.getProp('clientWidth');
   const DEFAULT_CANVAS_CLIENT_HEIGHT = CANVAS.getProp('clientHeight');
 
@@ -214,6 +215,8 @@ import * as utils from './utils';
     const dbh = canvasDimConfigs.height.drawingBuffer;
 
     scalingCoef = Math.round(toPreviewBrushScale(previewBrushWidthScale.getAttr('max')));
+    const pbc = new DOMElement(brushPreview.parent.self.querySelector('.preview-brush-container'));
+    pbc.setStyle('background', TRANSPARENT_BACKGROUND_VALUE);
 
     const brushConfigs = configs.brush;
     brushConfigs.src = brushPreview.getProp('src');
@@ -287,7 +290,6 @@ import * as utils from './utils';
       }
     }]);
 
-    // brushSettingsBox.addChild('previewBrushScaleRange', previewBrushScaleRange);
     canvasSettingsBox.addChildren({
       canvasWidthField,
       canvasHeightField,
@@ -310,6 +312,10 @@ import * as utils from './utils';
     const previewBrushConfigsDimType = configs.brush.dim[type];
     const defaultClientValue = previewBrushConfigsDimType.default.client;
     const scale = previewBrushConfigsDimType.scale;
+
+    console.log(type);
+    console.log(defaultClientValue, scale, scalingCoef);
+    console.log(Math.round((defaultClientValue * scale / scalingCoef)));
 
     return Math.round((defaultClientValue * scale / scalingCoef));
   }
@@ -358,10 +364,11 @@ import * as utils from './utils';
         newClientHeight = newClientWidth = Math.min(value, tempClientValue)
       }
 
-      width.client = newClientWith;
-      height.client = newClientHeight;
+      width.client = Math.min(newClientWidth, width.drawingBuffer);
+      height.client = Math.min(newClientHeight, height.drawingBuffer);
       width.ratio = width.drawingBuffer / width.client;
       height.ratio = height.drawingBuffer / height.client;
+
 
       const resolutionChangeCustomEvent = new CustomEvent('resolutionChange', {
         detail: {
@@ -468,9 +475,9 @@ import * as utils from './utils';
       const newDefaultWidth = currentBrush.naturalWidth;
       const newDefaultHeight = currentBrush.naturalHeight;
 
-      const brushConfigs = configs.brush;
-      brushConfigs.width.default.image = newDefaultWidth;
-      brushConfigs.height.default.image = newDefaultHeight;
+      const brushDimConfigs = configs.brush.dim;
+      brushDimConfigs.width.default.image = newDefaultWidth;
+      brushDimConfigs.height.default.image = newDefaultHeight;
     }
   }
 

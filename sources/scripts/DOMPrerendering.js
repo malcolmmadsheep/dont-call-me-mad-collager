@@ -3,6 +3,8 @@
 import DOMElement from './DOMElement';
 import * as utils from './utils';
 const picturesDirectory = './public/images';
+const MAXIMUM_IMAGE_WIDTH = 200;
+const MAXIMUM_IMAGE_HEIGHT = 200;
 const picturesSources = [
   '1.png',
   '2.png',
@@ -85,9 +87,11 @@ function renderBrushplate(sources, selectedItemSource) {
     const brush = brushes[i];
     brushesContainer.addChild(`brush-${i}`, brush, true);
     const clientHeight = brush.getProp('clientHeight');
+
     if (clientHeight > maxHeight) {
       maxHeight = clientHeight;
     }
+
     i += 1;
   }
 
