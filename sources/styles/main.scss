@@ -51,9 +51,14 @@ body {
         }
         .preview-brush-container {
           width: 90%;
-          height: 10%;
+          height: 200px;
+          margin-left: 5%;
+          border: 1px solid #000;
+          display: flex;
+          justify-content: center;
+          align-items: center;
           #preview-brush {
-            max-height: 100%;
+            height: 100%;
           }
         }
         input[type="range"] {
@@ -83,9 +88,9 @@ body {
             align-content: center;
             align-items: center;
             width: $brush-item-width;
-
             &.selected {
-              outline: 1px solid #125fa9;
+              // outline: 1px solid #125fa9;
+              border-bottom: 2px solid #125fa9;
             }
           }
         }

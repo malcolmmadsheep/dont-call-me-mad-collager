@@ -51,8 +51,14 @@ import * as utils from './utils';
       backgroundColor: '#fff'
     },
     brush: {
-      width: 0,
-      height: 0
+      width: {
+        default: {},
+        scale: 1
+      },
+      height: {
+        default: {},
+        scale: 1
+      }
     },
     mouse: {
       isDown: false,
@@ -189,16 +195,29 @@ import * as utils from './utils';
   function setToolsBoxItems(toolsBox) {
     const canvasSettingsBox = new DOMElement(getElementById('canvas-settings-box'));
     const brushPreviewChildren = prerender();
+    const { previewBox, brushesBox } = brushPreviewChildren; //brushSettingsBox.getChild('brushPreview');
+    console.log(brushPreviewChildren);
+    // const brushes = brushSettingsBox.getChild('brushesBox').childrenToArray();
+    const brushes = brushesBox.childrenToArray();
+    const brushPreview = previewBox.getChild('brushPreview');
     const brushSettingsBox = new DOMElement(getElementById('brush-settings-box'), brushPreviewChildren);
-    const previewBrushScaleRange = new DOMElement(getElementById('preview-brush-scale'));
     const canvasWidthField = new DOMElement(getElementById('canvas-width'));
     const canvasHeightField = new DOMElement(getElementById('canvas-height'));
     const canvasTBgRadio = new DOMElement(getElementById('transparent-background-color-radio'));
     const canvasColorBgRadio = new DOMElement(getElementById('color-background-color-radio'));
     const canvasBgColorInput = new DOMElement(getElementById('background-color-input'));
+    const previewBrushWidthScale = new DOMElement(getElementById('preview-brush-width-scale'));
+    const previewBrushHeightScale = new DOMElement(getElementById('preview-brush-height-scale'));
     const canvasDimConfigs = configs.canvas.dim;
     const dbw = canvasDimConfigs.width.drawingBuffer;
     const dbh = canvasDimConfigs.height.drawingBuffer;
+
+    const brushConfigs = configs.brush;
+    const bwdc = brushConfigs.width.default.client = brushPreview.getProp('clientWidth');
+    const bhdc = brushConfigs.height.default.client = brushPreview.getProp('clientHeight');
+    brushPreview.setStyle('width', utils.toPx(bwdc * configs.brush.width.scale / 2));
+    brushPreview.setStyle('height', utils.toPx(bhdc * configs.brush.height.scale / 2));
+
 
     canvasWidthField.addListeners([{
       name: 'blur',
@@ -227,7 +246,7 @@ import * as utils from './utils';
         name: 'click',
         callback(event) {
           const newBackgroundColor = event.target.value;
-          
+
           setCanvasBackgroundColor(newBackgroundColor);
         }
       }]);
@@ -243,8 +262,32 @@ import * as utils from './utils';
         }
       }
     }]);
+    previewBrushWidthScale.addListeners([{
+      name: 'change,mousemove',
+      callback(event) {
+        const target = this;
+        const newScale = toPreviewBrushScale(this.getProp('value'));
+        const brushWidthConfigs = configs.brush.width;
+        const dbwc = brushWidthConfigs.default.client;
 
-    brushSettingsBox.addChild('previewBrushScaleRange', previewBrushScaleRange);
+        brushWidthConfigs.scale = newScale;
+        brushPreview.setStyle('width', utils.toPx(dbwc * newScale / 2));
+      }
+    }]);
+    previewBrushHeightScale.addListeners([{
+      name: 'change,mousemove',
+      callback(event) {
+        const target = this;
+        const newScale = toPreviewBrushScale(this.getProp('value'));
+        const brushWidthConfigs = configs.brush.height;
+        const dbwc = brushWidthConfigs.default.client;
+
+        brushWidthConfigs.scale = newScale;
+        brushPreview.setStyle('height', utils.toPx(dbwc * newScale / 2));
+      }
+    }]);
+
+    // brushSettingsBox.addChild('previewBrushScaleRange', previewBrushScaleRange);
     canvasSettingsBox.addChildren({
       canvasWidthField,
       canvasHeightField,
@@ -253,8 +296,6 @@ import * as utils from './utils';
       canvasBgColorInput
     });
 
-    const brushPreview = brushSettingsBox.getChild('brushPreview');
-    const brushes = brushSettingsBox.getChild('brushesBox').childrenToArray();
     setBrushesEventHandlers(brushes, brushPreview);
 
     toolsBox.addChildren({
@@ -383,27 +424,33 @@ import * as utils from './utils';
     redraw();
   }
 
-  function setBrushesEventHandlers(brushesItems, brushPreview) {
-    brushesItems.map(brushesItem => brushesItem.getChild('brush-example'))
-      .forEach((brush, i, brushes) => {
-        brush.addListeners([{
-          name: 'click',
-          callback: createBrushHandler(brushesItems, brushPreview)
-        }]);
-      });
+  function setBrushesEventHandlers(brushesBoxes, brushPreview) {
+    brushesBoxes.forEach(brush => {
+      brush.addListeners([{
+        name: 'click',
+        callback: createBrushHandler(brushesBoxes, brushPreview)
+      }]);
+    });
 
-    return brushesItems;
+    return brushesBoxes;
   }
 
   function createBrushHandler(brushes, brushPreview) {
-    return (event) => {
-      const currentBrush = event.target;
-      const currentBrushSource = currentBrush.src;
+    return function(event) {
+      const currentBrushBox = this;
+      const currentBrush = this.getChild('brush-example');
+      const currentBrushSource = currentBrush.getProp('src');
 
       brushes.forEach(brush => brush.removeClass('selected'));
-      currentBrush.parentNode.classList.add('selected');
+      currentBrushBox.addClass('selected');
 
       brushPreview.setAttr('src', currentBrushSource);
+      const newDefaultWidth = currentBrush.naturalWidth;
+      const newDefaultHeight = currentBrush.naturalHeight;
+
+      const brushConfigs = configs.brush;
+      brushConfigs.width.default.image = newDefaultWidth;
+      brushConfigs.height.default.image = newDefaultHeight;
     }
   }
 
@@ -451,6 +498,10 @@ import * as utils from './utils';
     mousePos.y = Math.round(Y * canvasDim.height.ratio);
 
     mousePosBox.fireEvent(customEvents.onMouseCoordinatesChange);
+  }
+
+  function toPreviewBrushScale(value) {
+    return value / 10;
   }
 
   function setupCanvasSettings(canvas) {

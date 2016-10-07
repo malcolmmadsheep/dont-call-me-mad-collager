@@ -5,6 +5,7 @@ const document = window.document;
 export default class DOMElement {
   constructor(element, children) {
     this._self = element;
+    this._parent = null;
     this._children = {};
     if (children) {
       this.addChildren(children);
@@ -14,6 +15,10 @@ export default class DOMElement {
 
   get self() {
     return this._self;
+  }
+
+  get parent() {
+    return this._parent;
   }
 
   appendTo(domElement) {
@@ -28,11 +33,17 @@ export default class DOMElement {
     }
 
     const DOMChild = this._children[childName] = child;
+    child._setParent(this);
+
     if (render) {
       this._self.appendChild(child._self);
     }
 
     return this;
+  }
+
+  _setParent(parent) {
+    this._parent = parent;
   }
 
   /**
@@ -63,7 +74,8 @@ export default class DOMElement {
     listeners.forEach(listener => {
       const { name, callback } = listener;
 
-      this._self.addEventListener(name, callback.bind(this), false);
+      const names = name.split(',');
+      names.forEach(name => this._self.addEventListener(name, callback.bind(this), false));
     });
   }
 

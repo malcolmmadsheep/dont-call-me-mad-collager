@@ -1,6 +1,7 @@
 'use strict';
 
 import DOMElement from './DOMElement';
+import * as utils from './utils';
 const picturesDirectory = './public/images';
 const picturesSources = [
   '1.png',
@@ -12,7 +13,8 @@ const picturesSources = [
   '7.png',
   '8.png',
   '9.png',
-  '10.png'
+  '10.png',
+  'dwi.png'
 ].map(filename => (`${picturesDirectory}/${filename}`));
 
 export default function render() {
@@ -59,6 +61,7 @@ function createPreviewBrush(sources) {
 }
 
 function renderBrushplate(sources, selectedItemSource) {
+  let maxHeight = -1;
   const brushes = sources.map(source => {
     const img = new DOMElement(createElement('img', {
       src: source
@@ -67,7 +70,9 @@ function renderBrushplate(sources, selectedItemSource) {
       className: `brush-item`
     }));
 
-    return div.addChild('brush-example', img, true);
+    div.addChild('brush-example', img, true);
+
+    return div;
   });
 
   brushes[0].addClass('selected');
@@ -77,9 +82,16 @@ function renderBrushplate(sources, selectedItemSource) {
   let i = 0;
 
   while (i < brushesCount) {
-    brushesContainer.addChild(`brush-${i}`, brushes[i], true);
+    const brush = brushes[i];
+    brushesContainer.addChild(`brush-${i}`, brush, true);
+    const clientHeight = brush.getProp('clientHeight');
+    if (clientHeight > maxHeight) {
+      maxHeight = clientHeight;
+    }
     i += 1;
   }
+
+  brushes.forEach(brush => brush.setStyle('height', utils.toPx(maxHeight)));
 
   return brushesContainer;
 }
