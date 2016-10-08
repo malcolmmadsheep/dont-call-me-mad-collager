@@ -80,7 +80,7 @@ import * as utils from './utils';
       detail: configs.mouse.pos
     })
   };
-  let mousePosBox, scalingCoef;
+  let mousePosBox, scalingCoef, brushPreview;
 
   window.onload = function() {
     setToolsBoxItems(DOMToolsBox);
@@ -93,84 +93,7 @@ import * as utils from './utils';
       DOMStatusBar
     });
 
-    // CANVAS.register('clear', clearCanvas);
     clearCanvas();
-    CTX.fillStyle = "rgb(200,0,0)"; // sets the color to fill in the rectangle with
-    CTX.fillRect(10, 10, 55, 50);
-    // CANVAS.run('clear', {ctx: CTX});
-
-    // var randBtn = document.getElementById('rand');
-    // var mouseIsDown = false;
-    // var dontStop = false;
-    // var CHBshouldIStop = document.getElementById('shouldIStop');
-    // var sizeRange = document.getElementById('size');
-    // var sizeExamp = document.getElementById('examplePic');
-
-    // canvas.addEventListener('click', function(evt) {
-    //   var size = sizeRange.value / 100;
-    //   var pos = getMousePos(canvas, evt);
-    //   if (isDefault) {
-    //     var n = (Math.random().toFixed(1) * 10) % 10 + 1;
-    //     imgSrc = 'img/' + String(n) + '.png';
-    //   }
-    //   createObject(pos, imgSrc, size);
-    // }, false);
-
-    // canvas.addEventListener('mousemove', function(evt) {
-    //   if (mouseIsDown && dontStop) {
-    //     var size = sizeRange.value / 100;
-    //     var pos = getMousePos(canvas, evt);
-    //     if (isDefault) {
-    //       var n = (Math.random().toFixed(1) * 10) % 10 + 1;
-    //       imgSrc = 'img/' + String(n) + '.png';
-    //     }
-    //     createObject(pos, imgSrc, size);
-    //   }
-    //   evt.target.style.cursor = 'initial';
-    // }, false);
-
-    // randBtn.addEventListener('click', function() {
-    //   isDefault = true;
-    //   lastTarget = null;
-    //   $('.brush').removeClass('selected');
-    // }, false);
-
-    // var cleCan = document.getElementById('clearCanvas');
-    // cleCan.addEventListener('click', function() {
-    //   clearCanvas(ctx, canvas);
-    // }, false);
-
-    // var lastTarget = null;
-    // $('#brushes').on('click', function(e) {
-    //   var target;
-    //   if ($(e.target).is('div')) {
-    //     target = $(e.target);
-    //   } else {
-    //     target = $(e.target).parent('div');
-    //   }
-
-    //   var lastSrc = lastTarget ? lastTarget.children('img').attr('src') : '';
-    //   var currSrc = target.children('img').attr('src');
-
-    //   if (!lastTarget) {
-    //     lastTarget = target;
-    //     target.addClass('selected');
-    //     target.css('border-right', '3px solid red');
-    //   } else if (lastSrc !== currSrc) {
-    //     lastTarget.removeClass('selected');
-    //     lastTarget.css('border-right', '1px solid navy');
-    //     lastTarget = target;
-    //     target.addClass('selected');
-    //     target.css('border-right', '3px solid red');
-    //   }
-
-    // CHBshouldIStop.addEventListener('click', function(e) {
-    //   if (e.target.checked) {
-    //     dontStop = true;
-    //   } else {
-    //     dontStop = false;
-    //   }
-    // }, false);
   }
 
   function redraw() {
@@ -182,7 +105,7 @@ import * as utils from './utils';
     const brushPreviewChildren = prerender();
     const { previewBox, brushesBox } = brushPreviewChildren;
     const brushes = brushesBox.childrenToArray();
-    const brushPreview = previewBox.getChild('brushPreview');
+    brushPreview = previewBox.getChild('brushPreview');
     const brushSettingsBox = new DOMElement(getElementById('brush-settings-box'), brushPreviewChildren);
     const canvasWidthField = new DOMElement(getElementById('canvas-width'));
     const canvasHeightField = new DOMElement(getElementById('canvas-height'));
@@ -198,8 +121,6 @@ import * as utils from './utils';
     const dbw = canvasDimConfigs.width.drawingBuffer;
     const dbh = canvasDimConfigs.height.drawingBuffer;
 
-    console.log(previewBrushWidthLabel);
-
     scalingCoef = Math.round(toPreviewBrushScale(previewBrushWidthScale.getAttr('max')));
     const pbc = new DOMElement(brushPreview.parent.self.querySelector('.preview-brush-container'));
     pbc.setStyle('background', TRANSPARENT_BACKGROUND_VALUE);
@@ -211,6 +132,7 @@ import * as utils from './utils';
     brushDimConfigs.height.default.client = brushPreview.getProp('clientHeight');
     brushDimConfigs.width.default.image = brushPreview.getProp('width');
     brushDimConfigs.height.default.image = brushPreview.getProp('height');
+    console.log(brushDimConfigs.width.default.image, brushDimConfigs.height.default.image)
     const pbwi = brushDimConfigs.width.image = calculatePreviewClientSize('width');
     const pbhi = brushDimConfigs.height.image = calculatePreviewClientSize('height');
     brushPreview.setStyle('width', utils.toPx(pbwi));
@@ -282,14 +204,6 @@ import * as utils from './utils';
         }
       }]);
     });
-    // [previewBrushWidthLabel, previewBrushHeightLabel].forEach(label => {
-    //   label.addListeners([{
-    //     name: 'previewBrushSizeChange',
-    //     callback(customEvent) {
-
-    //     }
-    //   }]);
-    // });
     canvasBgColorInput.addListeners([{
       name: 'change',
       callback(event) {
@@ -480,7 +394,7 @@ import * as utils from './utils';
       const onSizeChangeEvent = new CustomEvent('sizeChange', {
         detail: type
       });
-      DOMToolsBox.getChild('brushPreview').fireEvent(onSizeChangeEvent);
+      brushPreview.fireEvent(onSizeChangeEvent);
     }
 
     if (_isMouseDown()) {
@@ -503,7 +417,6 @@ import * as utils from './utils';
   }
 
   function setWorkspaceItems(workspace) {
-    const brushPreview = DOMToolsBox.getChild('brushPreview');
     workspace.addChild('canvas', CANVAS);
     mousePosBox = new DOMElement(getElementById('mouse-position-box'));
 
@@ -525,15 +438,16 @@ import * as utils from './utils';
     CANVAS.addListeners([
       { name: 'resolutionChange', callback: onCanvasResolutionChange }, // custom
       { name: 'mousemove', callback: onCanvasMouseCoordinatesUpdateHandler },
+      { name: 'mousedown', callback: onMouseDownEventHandler },
       {
-        name: 'mousemove',
+        name: 'mousemove,mousedown',
         callback(event) {
-
+          drawImage();
         }
-      }, { name: 'mouseleave', callback: onCanvasMouseLeaveHandler },
+      },
+      { name: 'mouseleave', callback: onCanvasMouseLeaveHandler },
       { name: 'click', callback: onCanvasMouseClickHandler },
-      { name: 'mousedown', callback(event) { configs.mouse.isDown = true; } },
-      { name: 'mouseup', callback(event) { configs.mouse.isDown = false; } }
+      { name: 'mouseup', callback: onMouseUpEventHandler }
     ]);
     setupCanvasSettings(CANVAS);
 
@@ -606,19 +520,25 @@ import * as utils from './utils';
   }
 
   function onCanvasMouseClickHandler(event) {
-    const { x, y } = configs.mouse.pos;
-    const brushDimConfigs = configs.brush.dim;
-    const { width, height } = brushDimConfigs;
-    const sourceImgWidth = width.default.image;
-    const sourceImgHeight = height.default.image;
-    const imgWidth = width.image;
-    const imgHeight = height.image;
-    const xPos = x - imgWidth / 2;
-    const yPos = y - imgHeight / 2;
+    drawImage();
+  }
 
-    // console.log(sourceImgWidth, sourceImgHeight, imgWidth, imgHeight, xPos, yPos);
+  function drawImage() {
+    if (_isMouseDown()) {
+      const { x, y } = configs.mouse.pos;
+      const brushDimConfigs = configs.brush.dim;
+      const { width, height } = brushDimConfigs;
+      const sourceImgWidth = width.default.image;
+      const sourceImgHeight = height.default.image;
+      const imgWidth = width.image;
+      const imgHeight = height.image;
+      const xPos = x - imgWidth / 2;
+      const yPos = y - imgHeight / 2;
 
-    CTX.drawImage(brushPreview.self, 0, 0, sourceImgWidth, sourceImgHeight, xPos, yPos, imgWidth, imgHeight);
+      // console.log(sourceImgWidth, sourceImgHeight, imgWidth, imgHeight, xPos, yPos);
+
+      CTX.drawImage(brushPreview.self, 0, 0, sourceImgWidth, sourceImgHeight, xPos, yPos, imgWidth, imgHeight);
+    }
   }
 
   function onCanvasMouseCoordinatesUpdateHandler(event) {
@@ -634,13 +554,19 @@ import * as utils from './utils';
     const { canvas } = configs;
     const canvasDim = canvas.dim;
     const { width, height } = canvasDim;
+    const dbw = width.drawingBuffer;
+    const dbh = height.drawingBuffer;
+    const prevW = this.getProp('width');
+    const prevH = this.getProp('height');
 
-    this.setProp('width', width.drawingBuffer)
+    const imgData = CTX.getImageData(0, 0, prevW, prevH);
+    this.setProp('width', dbw)
       .setStyle('width', utils.toPx(width.client))
-      .setProp('height', height.drawingBuffer)
+      .setProp('height', dbh)
       .setStyle('height', utils.toPx(height.client));
 
     clearCanvas();
+    CTX.putImageData(imgData, 0, 0);
     redraw();
   }
 
