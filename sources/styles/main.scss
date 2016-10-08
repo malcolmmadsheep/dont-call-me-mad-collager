@@ -63,10 +63,16 @@ body {
           }
         }
         input[type="range"] {
-          width: 80%;
+          width: 60%;
           &::-moz-focus-outer {
             border: 0;
           }
+        }
+        #chain {
+          width: 25px;
+          height: 25px;
+          background-size: cover;
+          margin-left: calc(50% - 12.5px);
         }
       }
       #brushes-list {

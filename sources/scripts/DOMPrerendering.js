@@ -2,7 +2,7 @@
 
 import DOMElement from './DOMElement';
 import * as utils from './utils';
-const picturesDirectory = './public/images';
+const brushesDirectory = './public/images/brushes';
 const MAXIMUM_IMAGE_WIDTH = 200;
 const MAXIMUM_IMAGE_HEIGHT = 200;
 const picturesSources = [
@@ -17,7 +17,7 @@ const picturesSources = [
   '9.png',
   '10.png',
   'dwi.png'
-].map(filename => (`${picturesDirectory}/${filename}`));
+].map(filename => (`${brushesDirectory}/${filename}`));
 
 export default function render() {
   const previewBox = renderBrushSettingsBox(picturesSources);

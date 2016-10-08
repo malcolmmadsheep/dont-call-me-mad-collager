@@ -13,6 +13,8 @@ import * as utils from './utils';
   const CANVAS = new DOMElement(getElementById('field'));
   const BODY = new DOMElement(document.body);
   const TRANSPARENT_BACKGROUND_VALUE = 'url("public/images/transparent-bg.gif") repeat';
+  const UNCHAINED_SIZES_IMG_PATH = 'public/images/unchain.png';
+  const CHAINED_SIZES_IMG_PATH = 'public/images/chain.png';
   CANVAS.setStyle('background', TRANSPARENT_BACKGROUND_VALUE);
   const DEFAULT_CANVAS_CLIENT_WIDTH = CANVAS.getProp('clientWidth');
   const DEFAULT_CANVAS_CLIENT_HEIGHT = CANVAS.getProp('clientHeight');
@@ -61,7 +63,8 @@ import * as utils from './utils';
         height: {
           default: {},
           scale: 1
-        }
+        },
+        chained: false
       }
     },
     mouse: {
@@ -102,8 +105,6 @@ import * as utils from './utils';
     // var CHBshouldIStop = document.getElementById('shouldIStop');
     // var sizeRange = document.getElementById('size');
     // var sizeExamp = document.getElementById('examplePic');
-    // var exampHeight = sizeExamp.height;
-    // sizeExamp.height = window.innerHeight * sizeRange.value / 100;
 
     // canvas.addEventListener('click', function(evt) {
     //   var size = sizeRange.value / 100;
@@ -126,14 +127,6 @@ import * as utils from './utils';
     //     createObject(pos, imgSrc, size);
     //   }
     //   evt.target.style.cursor = 'initial';
-    // }, false);
-
-    // canvas.addEventListener('mousedown', function() {
-    //   mouseIsDown = true;
-    // }, false);
-
-    // canvas.addEventListener('mouseup', function() {
-    //   mouseIsDown = false;
     // }, false);
 
     // randBtn.addEventListener('click', function() {
@@ -171,16 +164,6 @@ import * as utils from './utils';
     //     target.css('border-right', '3px solid red');
     //   }
 
-    //   imgSrc = target.children('img').attr('src');
-    //   $('#examplePic').attr('src', imgSrc);
-    //   isDefault = false;
-    // });
-
-    // $('#size').on('mousemove change', function() {
-    //   sizeExamp.height = window.innerHeight * $(this).val() / 100;
-    //   $('#tools').height(window.innerHeight);
-    // });
-
     // CHBshouldIStop.addEventListener('click', function(e) {
     //   if (e.target.checked) {
     //     dontStop = true;
@@ -197,9 +180,7 @@ import * as utils from './utils';
   function setToolsBoxItems(toolsBox) {
     const canvasSettingsBox = new DOMElement(getElementById('canvas-settings-box'));
     const brushPreviewChildren = prerender();
-    const { previewBox, brushesBox } = brushPreviewChildren; //brushSettingsBox.getChild('brushPreview');
-    // console.log(brushPreviewChildren);
-    // const brushes = brushSettingsBox.getChild('brushesBox').childrenToArray();
+    const { previewBox, brushesBox } = brushPreviewChildren;
     const brushes = brushesBox.childrenToArray();
     const brushPreview = previewBox.getChild('brushPreview');
     const brushSettingsBox = new DOMElement(getElementById('brush-settings-box'), brushPreviewChildren);
@@ -210,9 +191,14 @@ import * as utils from './utils';
     const canvasBgColorInput = new DOMElement(getElementById('background-color-input'));
     const previewBrushWidthScale = new DOMElement(getElementById('preview-brush-width-scale'));
     const previewBrushHeightScale = new DOMElement(getElementById('preview-brush-height-scale'));
+    const chainLable = new DOMElement(getElementById('chain'));
+    const previewBrushWidthLabel = new DOMElement(getElementById('brush-width'));
+    const previewBrushHeightLabel = new DOMElement(getElementById('brush-height'));
     const canvasDimConfigs = configs.canvas.dim;
     const dbw = canvasDimConfigs.width.drawingBuffer;
     const dbh = canvasDimConfigs.height.drawingBuffer;
+
+    console.log(previewBrushWidthLabel);
 
     scalingCoef = Math.round(toPreviewBrushScale(previewBrushWidthScale.getAttr('max')));
     const pbc = new DOMElement(brushPreview.parent.self.querySelector('.preview-brush-container'));
@@ -225,10 +211,34 @@ import * as utils from './utils';
     brushDimConfigs.height.default.client = brushPreview.getProp('clientHeight');
     brushDimConfigs.width.default.image = brushPreview.getProp('width');
     brushDimConfigs.height.default.image = brushPreview.getProp('height');
-    brushDimConfigs.width.image = calculatePreviewClientSize('width');
-    brushDimConfigs.height.image = calculatePreviewClientSize('height');
-    brushPreview.setStyle('width', utils.toPx(brushDimConfigs.width.image));
-    brushPreview.setStyle('height', utils.toPx(brushDimConfigs.height.image));
+    const pbwi = brushDimConfigs.width.image = calculatePreviewClientSize('width');
+    const pbhi = brushDimConfigs.height.image = calculatePreviewClientSize('height');
+    brushPreview.setStyle('width', utils.toPx(pbwi));
+    brushPreview.setStyle('height', utils.toPx(pbhi));
+
+    chainLable.setStyles({
+      'background-image': `url("${_getChainBgPath()}")`
+    });
+    chainLable.addListeners([{
+      name: 'click',
+      callback(event) {
+        const chained = brushDimConfigs.chained = !brushDimConfigs.chained;
+
+        this.setStyle('background-image', `url("${_getChainBgPath(chained)}")`);
+
+        if (chained) {
+          const widthScale = toPreviewBrushScale(previewBrushWidthScale.getProp('value'));
+          const heightScale = toPreviewBrushScale(previewBrushHeightScale.getProp('value'));
+          const value = widthScale === heightScale ? widthScale : 1;
+
+          _resetScalesValues(toPreviewBrushValue(value));
+          _setMouse('down');
+          changePreviewBrushSize(previewBrushWidthScale, 'width');
+          changePreviewBrushSize(previewBrushHeightScale, 'height');
+          _setMouse('up');
+        }
+      }
+    }]);
 
     brushPreview.addListeners([{
       name: 'sizeChange',
@@ -272,6 +282,14 @@ import * as utils from './utils';
         }
       }]);
     });
+    // [previewBrushWidthLabel, previewBrushHeightLabel].forEach(label => {
+    //   label.addListeners([{
+    //     name: 'previewBrushSizeChange',
+    //     callback(customEvent) {
+
+    //     }
+    //   }]);
+    // });
     canvasBgColorInput.addListeners([{
       name: 'change',
       callback(event) {
@@ -284,15 +302,35 @@ import * as utils from './utils';
       }
     }]);
     previewBrushWidthScale.addListeners([{
+      name: 'mousedown',
+      callback: onMouseDownEventHandler
+    }, {
       name: 'change,mousemove',
       callback(event) {
         changePreviewBrushSize(this, 'width');
       }
+    }, {
+      name: 'mouseup',
+      callback: onMouseUpEventHandler
     }]);
     previewBrushHeightScale.addListeners([{
+      name: 'mousedown',
+      callback: onMouseDownEventHandler
+    }, {
       name: 'change,mousemove',
       callback(event) {
         changePreviewBrushSize(this, 'height');
+      }
+    }, {
+      name: 'mouseup',
+      callback: onMouseUpEventHandler
+    }]);
+    brushSettingsBox.addListeners([{
+      name: 'previewBrushSizeChange',
+      callback(customEvent) {
+        const { width, height } = customEvent.detail;
+
+        updatePreviewBrushSizeLabelsValues(width, height);
       }
     }]);
 
@@ -304,12 +342,20 @@ import * as utils from './utils';
       canvasBgColorInput
     });
 
-    setBrushesEventHandlers(brushes, brushPreview);
+    brushSettingsBox.addChildren({
+      previewBrushWidthScale,
+      previewBrushHeightScale,
+      previewBrushWidthLabel,
+      previewBrushHeightLabel
+    });
 
     toolsBox.addChildren({
       brushSettingsBox,
       canvasSettingsBox
     });
+
+    updatePreviewBrushSizeLabelsValues(pbwi, pbhi);
+    setBrushesEventHandlers(brushes, brushPreview);
 
     return toolsBox;
   }
@@ -332,6 +378,25 @@ import * as utils from './utils';
     if (keyCode === 13) {
       updateCanvasResolution(event, propertyName, previousValue);
     }
+  }
+
+  function _getChainBgPath(chained) {
+    return chained ? CHAINED_SIZES_IMG_PATH : UNCHAINED_SIZES_IMG_PATH;
+  }
+
+  function _resetScalesValues(value) {
+    const dimConfigs = configs.brush.dim;
+
+    dimConfigs.width.scale = dimConfigs.height.scale = toPreviewBrushScale(value);
+
+    const previewBrushWidthScale = DOMToolsBox.getChild('previewBrushWidthScale');
+    const previewBrushHeightScale = DOMToolsBox.getChild('previewBrushHeightScale');
+
+    previewBrushWidthScale.setProp('value', value);
+    previewBrushHeightScale.setProp('value', value);
+
+    changePreviewBrushSize(previewBrushWidthScale, 'width');
+    changePreviewBrushSize(previewBrushHeightScale, 'height');
   }
 
   function updateCanvasResolution(event, propertyName, previousValue) {
@@ -389,16 +454,52 @@ import * as utils from './utils';
     }
   }
 
-  function changePreviewBrushSize(target, type) {
-    const newScale = toPreviewBrushScale(target.getProp('value'));
-    const brushTypeConfig = configs.brush.dim[type];
-    const dbtc = brushTypeConfig.default.client;
+  function updatePreviewBrushSizeLabelsValues(width, height) {
+    DOMToolsBox.getChild('previewBrushWidthLabel')
+      .setProp('textContent', utils.toPx(width))
+      .getSibling('previewBrushHeightLabel')
+      .setProp('textContent', utils.toPx(height));
+  }
 
-    brushTypeConfig.scale = newScale;
-    const onSizeChangeEvent = new CustomEvent('sizeChange', {
-      detail: type
-    });
-    DOMToolsBox.getChild('brushPreview').fireEvent(onSizeChangeEvent);
+  function onMouseDownEventHandler(event) {
+    _setMouse('down');
+  }
+
+  function onMouseUpEventHandler(event) {
+    _setMouse('up');
+  }
+
+  function changePreviewBrushSize(target, type) {
+    function changeSize(target, type, value) {
+      const newScale = toPreviewBrushScale(value);
+      const brushTypeConfig = configs.brush.dim[type];
+      const dbtc = brushTypeConfig.default.client;
+
+      target.setProp('value', value);
+      brushTypeConfig.scale = newScale;
+      const onSizeChangeEvent = new CustomEvent('sizeChange', {
+        detail: type
+      });
+      DOMToolsBox.getChild('brushPreview').fireEvent(onSizeChangeEvent);
+    }
+
+    if (_isMouseDown()) {
+      const value = target.getProp('value');
+      changeSize(target, type, value);
+      if (configs.brush.dim.chained) {
+        const oppositType = (type === 'width') ? 'height' : 'width';
+        const anotherScaler = (oppositType === 'width') ? DOMToolsBox.getChild('previewBrushWidthScale') : DOMToolsBox.getChild('previewBrushHeightScale');
+        changeSize(anotherScaler, oppositType, value);
+      }
+
+      const previewBrushSizeChangeEvent = new CustomEvent('previewBrushSizeChange', {
+        detail: {
+          width: configs.brush.dim.width.image,
+          height: configs.brush.dim.height.image
+        }
+      });
+      DOMToolsBox.getChild('brushSettingsBox').fireEvent(previewBrushSizeChangeEvent);
+    }
   }
 
   function setWorkspaceItems(workspace) {
@@ -427,7 +528,7 @@ import * as utils from './utils';
       {
         name: 'mousemove',
         callback(event) {
-          
+
         }
       }, { name: 'mouseleave', callback: onCanvasMouseLeaveHandler },
       { name: 'click', callback: onCanvasMouseClickHandler },
@@ -443,6 +544,14 @@ import * as utils from './utils';
     statusBar.addChild('mousePosBox', mousePosBox);
 
     return statusBar;
+  }
+
+  function _setMouse(param) {
+    configs.mouse.isDown = (param === 'up') ? false : true;
+  }
+
+  function _isMouseDown() {
+    return configs.mouse.isDown;
   }
 
   function clearCanvas() {
@@ -560,6 +669,10 @@ import * as utils from './utils';
 
   function toPreviewBrushScale(value) {
     return value / 10;
+  }
+
+  function toPreviewBrushValue(scale) {
+    return scale * 10;
   }
 
   function setupCanvasSettings(canvas) {

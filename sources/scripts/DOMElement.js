@@ -70,6 +70,16 @@ export default class DOMElement {
     return child;
   }
 
+  getSibling(siblingName) {
+    const parent = this.parent;
+
+    if (parent) {
+      return this.parent.getChild(siblingName);
+    }
+
+    return null;
+  }
+
   addListeners(listeners) {
     listeners.forEach(listener => {
       const { name, callback } = listener;
@@ -103,6 +113,16 @@ export default class DOMElement {
 
   setStyle(name, value) {
     this._self.style[name] = value;
+
+    return this;
+  }
+
+  setStyles(styles) {
+    for (let s in styles) {
+      if (styles.hasOwnProperty(s)) {
+        this.setStyle(s, styles[s]);
+      }
+    }
 
     return this;
   }
