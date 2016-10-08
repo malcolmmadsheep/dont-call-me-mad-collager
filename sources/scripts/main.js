@@ -117,6 +117,7 @@ import * as utils from './utils';
     const chainLable = new DOMElement(getElementById('chain'));
     const previewBrushWidthLabel = new DOMElement(getElementById('brush-width'));
     const previewBrushHeightLabel = new DOMElement(getElementById('brush-height'));
+    const clearCanvasButton = new DOMElement(getElementById('clear-canvas'));
     const canvasDimConfigs = configs.canvas.dim;
     const dbw = canvasDimConfigs.width.drawingBuffer;
     const dbh = canvasDimConfigs.height.drawingBuffer;
@@ -247,13 +248,20 @@ import * as utils from './utils';
         updatePreviewBrushSizeLabelsValues(width, height);
       }
     }]);
+    clearCanvasButton.addListeners([{
+      name: 'click',
+      callback(event) {
+        clearCanvas();
+      }
+    }]);
 
     canvasSettingsBox.addChildren({
       canvasWidthField,
       canvasHeightField,
       canvasColorBgRadio,
       canvasTBgRadio,
-      canvasBgColorInput
+      canvasBgColorInput,
+      clearCanvasButton
     });
 
     brushSettingsBox.addChildren({
@@ -278,10 +286,6 @@ import * as utils from './utils';
     const previewBrushConfigsDimType = configs.brush.dim[type];
     const defaultClientValue = previewBrushConfigsDimType.default.client;
     const scale = previewBrushConfigsDimType.scale;
-
-    // console.log(type);
-    // console.log(defaultClientValue, scale, scalingCoef);
-    // console.log(Math.round((defaultClientValue * scale / scalingCoef)));
 
     return Math.round((defaultClientValue * scale / scalingCoef));
   }
