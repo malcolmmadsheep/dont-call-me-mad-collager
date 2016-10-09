@@ -319,7 +319,8 @@ import * as utils from './utils';
   }
 
   function createBrushplate(sources, selectedItemSource) {
-    let maxHeight = -1;
+    let sumWidthes = -1;
+    const brushesContainer = new DOMElement(getElementById('brushes'));
     const createElement = utils.createElement;
     const brushes = sources.map(source => {
       const img = new DOMElement(createElement('img', {
@@ -335,7 +336,6 @@ import * as utils from './utils';
     });
 
     brushes[0].addClass('selected');
-    const brushesContainer = new DOMElement(getElementById('brushes'));
 
     const brushesCount = brushes.length;
     let i = 0;
@@ -343,16 +343,16 @@ import * as utils from './utils';
     while (i < brushesCount) {
       const brush = brushes[i];
       brushesContainer.addChild(`brush-${i}`, brush, true);
-      const clientHeight = brush.getProp('clientHeight');
+      const width = parseFloat(brush.getStyle('width'));
 
-      if (clientHeight > maxHeight) {
-        maxHeight = clientHeight;
-      }
-
+      sumWidthes += width;
       i += 1;
     }
 
-    brushes.forEach(brush => brush.setStyle('height', utils.toPx(maxHeight)));
+    const averageWidth = sumWidthes / brushesCount;
+    const averageHeight = Math.round(averageWidth * 1.5);
+
+    brushes.forEach(brush => brush.setStyle('height', utils.toPx(averageHeight)));
 
     return brushesContainer;
   }
