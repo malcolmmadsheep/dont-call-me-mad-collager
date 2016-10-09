@@ -1,6 +1,6 @@
 # Collager
 
-No sense just fun. [Check this out](http://malcolmmadsheep.com/collager)
+No sense just fun. [Check this out](http://malcolmmadsheep.com/collager)!
 
 ### I know ...
 
