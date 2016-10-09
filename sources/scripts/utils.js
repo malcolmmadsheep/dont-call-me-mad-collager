@@ -21,3 +21,19 @@ export function checkNum(numStr) {
 
   return (checkedNum.length === numStr.length) ? parseInt(checkedNum) : null;
 }
+
+export function createElement(tagName, options) {
+  const element = document.createElement(tagName);
+
+  for (let option in options) {
+    if (options.hasOwnProperty(option)) {
+      element[option] = options[option];
+    }
+  }
+
+  return element;
+}
+
+export function appendChildren(children, to) {
+  children.forEach(child => to.append(child));
+}
