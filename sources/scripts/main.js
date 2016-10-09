@@ -407,7 +407,11 @@ import * as utils from './utils';
   }
 
   function onMouseDownEventHandler(event) {
-    _setMouse('down');
+    const { buttons } = event;
+
+    if (buttons === 1) {
+      _setMouse('down');
+    }
   }
 
   function onMouseUpEventHandler(event) {
